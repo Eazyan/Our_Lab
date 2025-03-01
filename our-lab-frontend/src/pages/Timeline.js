@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './Timeline.css';
+import { getBookings } from '/Users/eazyan/Documents/Our_Lab/our-lab-frontend/src/utils/api.js'; // Для получения бронирований
 
-const Timeline = ({ bookings }) => {
+const Timeline = () => {
   const startTime = 8;  // Начало времени (8:00)
   const endTime = 23;   // Конец времени (23:00)
   const timeSlots = [];
@@ -11,64 +12,68 @@ const Timeline = ({ bookings }) => {
     timeSlots.push(`${i}:00`, `${i}:30`);
   }
 
-  // Получаем уникальные даты для таймлайна
-  const dates = bookings.reduce((acc, booking) => {
-    const date = new Date(booking.startTime).toLocaleDateString();
-    if (!acc.includes(date)) acc.push(date);
-    return acc;
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Загружаем бронирования
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const bookingsData = await getBookings();
+        setBookings(bookingsData);
+      } catch (error) {
+        console.error('Ошибка при загрузке бронирований:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
   }, []);
+
+  if (loading) return <div>Загрузка...</div>;
 
   return (
     <div className="timeline">
       <div className="timeline-header">
         <div className="timeline-time-slot"></div>
-        {dates.map((date) => (
-          <div key={date} className="timeline-date">
-            <strong>{date}</strong>
-          </div>
-        ))}
+        <div className="timeline-date">
+          <strong>2025-03-05</strong>
+        </div>
       </div>
 
       <div className="timeline-body">
-        {timeSlots.map((slot) => (
+        {timeSlots.map((slot, index) => (
           <div key={slot} className="timeline-row">
             <div className="timeline-time">{slot}</div>
-            {dates.map((date) => {
-              // Фильтруем бронирования по дате
-              const relevantBookings = bookings.filter((booking) => {
-                const bookingDate = new Date(booking.startTime).toLocaleDateString();
-                return bookingDate === date;
-              });
+            <div className="timeline-cell">
+              {/* Отображаем все бронирования, начинающиеся с этого временного слота */}
+              {bookings.map((booking) => {
+                const bookingStart = new Date(booking.startTime);
+                const bookingEnd = new Date(booking.endTime);
 
-              return (
-                <div key={date} className="timeline-cell">
-                  {relevantBookings.map((booking) => {
-                    const start = new Date(booking.startTime);
-                    const end = new Date(booking.endTime);
+                // Проверяем, попадает ли текущее время в диапазон этого бронирования
+                if (index === ((bookingStart.getHours() - startTime) * 2 + Math.floor(bookingStart.getMinutes() / 30))) {
+                  const durationInSlots = (bookingEnd - bookingStart) / (30 * 60 * 1000); // Считаем длительность в слотах (30 минут = 1 слот)
+                  const startSlot = (bookingStart.getHours() - startTime) * 2 + Math.floor(bookingStart.getMinutes() / 30); // Позиция в строках времени
 
-                    // Расчет времени в слотах (0.5 часов = 1 слот)
-                    const startSlot = (start.getHours() - startTime) * 2 + Math.floor(start.getMinutes() / 30); // Позиция карточки по времени
-                    const durationInSlots = (end - start) / (30 * 60 * 1000); // Количество слотов (каждый слот - 30 минут)
+                  return (
+                    <div
+                      key={booking.id}
+                      className="booking-card"
+                      style={{
+                        height: `${durationInSlots * 60}px`,  // Высота бронирования пропорциональна его продолжительности
+                        top: `${startSlot * 60}px`, // Позиция по времени
+                      }}
+                    >
+                      {booking.deviceName}
+                    </div>
+                  );
+                }
 
-                    // Позиция по вертикали, сколько слотов прошло с начала дня
-                    const topPosition = (startSlot / (2 * (endTime - startTime))) * 100;
-
-                    return (
-                      <div
-                        key={booking.id}
-                        className="booking-card"
-                        style={{
-                          height: `${durationInSlots * 100}%`,  // Высота зависит от длительности бронирования
-                          top: `${topPosition}%`,               // Позиция сверху в зависимости от времени начала
-                        }}
-                      >
-                        {booking.deviceName}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
+                return null;
+              })}
+            </div>
           </div>
         ))}
       </div>
