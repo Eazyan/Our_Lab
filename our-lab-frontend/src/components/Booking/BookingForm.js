@@ -1,59 +1,45 @@
 import React, { useState } from 'react';
-import { createBooking } from '/Users/eazyan/Documents/Our_Lab/our-lab-frontend/src/utils/api'; // Импортируем функцию для бронирования
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Импортируем стили для уведомлений
 
-const BookingForm = ({ deviceId, deviceName, onBookingSuccess, status }) => {
+const BookingForm = ({ deviceId, onBookingSuccess }) => {
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [error, setError] = useState('');
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
+
     if (!startTime || !endTime) {
-      setError('Пожалуйста, укажите время бронирования.');
+      alert("Пожалуйста, укажите время начала и окончания бронирования");
       return;
     }
-  
-    try {
-      // Создаем бронирование с использованием deviceId и времени
-      await createBooking(deviceId,deviceName, // Имя прибора
-        startTime,
-        endTime,
-        status, // Статус по умолчанию
-      );
-  
-      // Показ уведомления с помощью react-toastify
-      toast.success(`Прибор забронирован с ${startTime} до ${endTime}`);
-  
-      // Обновляем состояние или вызываем функцию обратного вызова
-      onBookingSuccess(startTime, endTime);
-    } catch (error) {
-      setError('Ошибка при бронировании. Пожалуйста, попробуйте позже.');
+
+    if (new Date(startTime) >= new Date(endTime)) {
+      alert("Время окончания не может быть раньше времени начала");
+      return;
     }
+
+    onBookingSuccess(startTime, endTime); // Передаем данные обратно в родительский компонент
+    setStartTime('');
+    setEndTime('');
   };
 
   return (
     <div>
-      <h2>Бронирование прибора</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <h3>Форма бронирования</h3>
       <form onSubmit={handleSubmit}>
         <div>
           <label>Время начала:</label>
-          <input
-            type="datetime-local"
-            value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
-            required
+          <input 
+            type="datetime-local" 
+            value={startTime} 
+            onChange={(e) => setStartTime(e.target.value)} 
           />
         </div>
         <div>
           <label>Время окончания:</label>
-          <input
-            type="datetime-local"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-            required
+          <input 
+            type="datetime-local" 
+            value={endTime} 
+            onChange={(e) => setEndTime(e.target.value)} 
           />
         </div>
         <button type="submit">Забронировать</button>

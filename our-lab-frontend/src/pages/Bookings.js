@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import BookingForm from '../components/Booking/BookingForm';
 import BookingHistory from '../components/Booking/BookingHistory';
 import { getDevices, getBookings } from '/Users/eazyan/Documents/Our_Lab/our-lab-frontend/src/utils/api.js'; // Для получения данных о приборах и бронированиях
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Bookings = () => {
     const [devices, setDevices] = useState([]);
@@ -25,32 +27,42 @@ const Bookings = () => {
       fetchData();
     }, []);
   
-    const handleBookingSuccess = (startTime, endTime) => {
+    const handleBookingSuccess = async (startTime, endTime) => {
         alert(`Прибор забронирован с ${startTime} до ${endTime}`);
       
         const selectedDeviceObj = devices.find((device) => device.id === selectedDevice);
       
         if (selectedDeviceObj) {
-          // Добавляем бронирование с полными данными
-          setBookings([
-            ...bookings,
-            {
-              id: bookings.length + 1,
-              deviceId: selectedDevice,
-              deviceName: selectedDeviceObj.name,  // Добавляем имя устройства
-              startTime,
-              endTime,
-              status: 'Ожидает подтверждения',  // Статус по умолчанию
-            },
-          ]);
+          // Создаем объект для нового бронирования
+          const newBooking = {
+            deviceId: selectedDevice,
+            deviceName: selectedDeviceObj.name,
+            startTime,
+            endTime,
+            status: 'Ожидает подтверждения',  // Статус по умолчанию
+          };
+      
+          try {
+            // Отправляем POST запрос для сохранения на сервере
+            const response = await axios.post('http://localhost:5001/bookings', newBooking);
+      
+            // Обновляем список бронирований, добавляя новое
+            setBookings((prevBookings) => [
+              ...prevBookings,
+              response.data,  // Ответ от сервера, который содержит данные нового бронирования
+            ]);
+      
+            toast.success('Бронирование успешно создано!');
+          } catch (error) {
+            console.error('Ошибка при создании бронирования:', error);
+            toast.error('Не удалось создать бронирование.');
+          }
         } else {
           console.error('Прибор не найден');
         }
       };
       
       
-      
-  
     if (loading) return <div>Загрузка...</div>;
   
     return (
@@ -70,10 +82,9 @@ const Bookings = () => {
           {selectedDevice && (
             <BookingForm deviceId={selectedDevice} onBookingSuccess={handleBookingSuccess} />
           )}
-          <BookingHistory bookings={bookings} devices={devices} /> {/* Передаем devices */}
+          <BookingHistory bookings={bookings} devices={devices} /> {/* Передаем устройства и бронирования */}
         </div>
       );
-      
-  };
+};
 
-export default Bookings
+export default Bookings;
