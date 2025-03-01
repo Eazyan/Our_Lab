@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import DeviceList from './pages/DeviceList';
 import Bookings from './pages/Bookings';
 import axios from 'axios';
+import Timeline from './pages/Timeline';
 
 function App() {
   const [bookings, setBookings] = useState([]);
@@ -33,6 +34,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/devices" element={<DeviceList />} />
+        <Route path="/timeline" element={<Timeline />} />
+
         <Route
           path="/bookings"
           element={<Bookings bookings={bookings} devices={devices} setBookings={setBookings} />}
