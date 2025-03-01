@@ -1,0 +1,35 @@
+{
+  "devices": [
+    {
+      "id": "1",
+      "name": "Микроскоп",
+      "description": "Микроскоп для анализа образцов.",
+      "available": true,
+      "characteristics": "10x, 20x, 40x увеличение"
+    },
+    {
+      "id": "2",
+      "name": "Цифровой осциллограф",
+      "description": "Осциллограф для измерений сигналов.",
+      "available": false,
+      "characteristics": "100 MHz, 2 канала"
+    }
+  ],
+  "bookings": [
+    {
+      "id": "45d8",
+      "deviceId": "1",
+      "deviceName": "Микроскоп",
+      "startTime": "2025-03-01T21:08",
+      "endTime": "2025-03-01T22:07",
+      "status": "Ожидает подтверждения"
+    },
+    {
+      "id": "d5ab",
+      "deviceId": "2",
+      "deviceName": "Цифровой осциллограф",
+      "endTime": "2025-03-02T22:23",
+      "status": "Ожидает подтверждения"
+    }
+  ]
+}
