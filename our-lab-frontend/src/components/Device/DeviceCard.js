@@ -14,6 +14,13 @@ const DeviceCard = ({ device, setDevices }) => {
       // Отправляем обновленный статус на сервер
       await axios.patch(`${apiUrl}/devices/${device.id}`, { available: newStatus === 'Доступен' });
       alert(`Статус прибора "${device.name}" изменен на: ${newStatus}`);
+      
+      // Обновляем состояние устройств в родительском компоненте
+      setDevices((prevDevices) =>
+        prevDevices.map((d) =>
+          d.id === device.id ? { ...d, available: newStatus === 'Доступен' } : d
+        )
+      );
     } catch (error) {
       console.error('Ошибка при обновлении статуса:', error);
       alert('Не удалось обновить статус прибора.');
@@ -26,7 +33,7 @@ const DeviceCard = ({ device, setDevices }) => {
       <p><strong>Описание:</strong> {device.description}</p>
       <p><strong>Доступность:</strong> {status}</p>
       <p><strong>Характеристики:</strong> {device.characteristics}</p>
-      <button onClick={handleStatusChange}>Изменить статус</button> {/* Здесь вызываем функцию */}
+      <button onClick={handleStatusChange}>Изменить статус</button>
     </div>
   );
 };

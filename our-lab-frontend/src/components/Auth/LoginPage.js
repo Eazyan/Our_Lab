@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Для редиректа после успешного входа
+import { useHistory } from 'react-router-dom'; // Для редиректа после успешного входа
 
-const Login = () => {
-  const navigate = useNavigate();
+const LoginPage = () => {
+  const history = useHistory();
 
   // Состояние для хранения данных формы
   const [email, setEmail] = useState('');
@@ -18,14 +18,14 @@ const Login = () => {
       let response;
       if (isRegistering) {
         // Если регистрация, отправляем данные для создания нового пользователя
-        response = await fetch(`${process.env.REACT_APP_API_URL}/register`, {
+        response = await fetch('/api/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
         });
       } else {
         // Если вход, отправляем данные для аутентификации
-        response = await fetch(`${process.env.REACT_APP_API_URL}/login`, {
+        response = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
@@ -42,7 +42,7 @@ const Login = () => {
       localStorage.setItem('authToken', data.token);
 
       // Редиректим на главную страницу или страницу профиля
-      navigate('/dashboard');
+      history.push('/dashboard');
     } catch (error) {
       setError(error.message);
     }
@@ -86,4 +86,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default LoginPage;

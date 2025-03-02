@@ -3,17 +3,19 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css'; // Импортируем стили для уведомлений
 
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import DeviceList from './pages/DeviceList';
-import Bookings from './pages/Bookings';
+import Login from './pages/Login'; // Форма входа
+import Dashboard from './pages/Dashboard'; // Страница, на которую редиректим после успешного входа
+import DeviceList from './pages/DeviceList'; // Страница с устройствами
+import Bookings from './pages/Bookings'; // Страница с бронированиями
+import Timeline from './pages/Timeline'; // Страница с таймлайном
 import axios from 'axios';
-import Timeline from './pages/Timeline';
 import { apiUrl } from './utils/api'; // Импортируем apiUrl
 
 function App() {
   const [bookings, setBookings] = useState([]);
   const [devices, setDevices] = useState([]);
+
+  const isAuthenticated = !!localStorage.getItem('authToken'); // Проверка авторизации
 
   useEffect(() => {
     const fetchData = async () => {
@@ -32,16 +34,14 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/devices" element={<DeviceList />} />
-        <Route path="/timeline" element={<Timeline />} />
-
-        <Route
-          path="/bookings"
-          element={<Bookings bookings={bookings} devices={devices} setBookings={setBookings} />}
-        />
+        <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
+        
+        {/* Защищённые маршруты */}
+        <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
+        <Route path="/devices" element={isAuthenticated ? <DeviceList /> : <Navigate to="/login" />} />
+        <Route path="/timeline" element={isAuthenticated ? <Timeline /> : <Navigate to="/login" />} />
+        <Route path="/bookings" element={isAuthenticated ? <Bookings bookings={bookings} devices={devices} setBookings={setBookings} /> : <Navigate to="/login" />} />
       </Routes>
       <ToastContainer />
     </Router>

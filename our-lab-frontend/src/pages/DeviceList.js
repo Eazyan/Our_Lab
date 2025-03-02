@@ -22,20 +22,6 @@ const DeviceList = () => {
   }, []);
 
   if (loading) return <div>Загрузка...</div>;
-  const handleStatusChange = async (deviceId) => {
-    try {
-      // Обновляем состояние устройства в списке
-      const updatedDevices = devices.map(device =>
-        device.id === deviceId
-          ? { ...device, available: !device.available }
-          : device
-      );
-      setDevices(updatedDevices);
-    } catch (error) {
-      console.error('Ошибка при обновлении статуса прибора:', error);
-    }
-  };
-  
 
   return (
     <div>
@@ -43,7 +29,7 @@ const DeviceList = () => {
       {devices.length > 0 ? (
         <div>
           {devices.map((device) => (
-            <DeviceCard key={device.id} device={device} />
+            <DeviceCard key={device.id} device={device} setDevices={setDevices} />
           ))}
         </div>
       ) : (

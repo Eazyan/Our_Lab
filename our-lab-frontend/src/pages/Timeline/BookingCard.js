@@ -25,11 +25,14 @@ const BookingCard = ({ booking, bookingStart, bookingEnd }) => {
   const topPosition = (startTimeMinutes / dayLengthMinutes) * 100; // Расположить по шкале времени
 
   // Рассчитываем высоту карточки (400% для 2 часов)
-  // Пропорция: для 2 часов = 400%, для 1 часа = 200%, для 30 минут = 100%
   const height = (durationInMinutes / (60 * 2)) * 400;
 
   // Получаем цвет для карточки на основе устройства
   const backgroundColor = getRandomColor(booking.deviceName);
+
+  // Определяем доступность устройства
+  const deviceStatus = booking.deviceAvailable ? "Доступен" : "Не доступен";
+  const deviceStatusColor = booking.deviceAvailable ? "#4CAF50" : "#F44336"; // Зеленый для доступного, красный для недоступного
 
   return (
     <div
@@ -39,12 +42,64 @@ const BookingCard = ({ booking, bookingStart, bookingEnd }) => {
         top: `${topPosition}%`,  // Позиция сверху на шкале времени
         height: `${height}%`,    // Высота пропорциональна длительности
         backgroundColor,        // Цвет карточки
+        borderRadius: '12px',    // Скругленные углы
+        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)', // Легкая тень
+        overflow: 'hidden',      // Чтобы контент не выходил за пределы
+        transition: 'all 0.3s ease', // Плавные анимации
+        display: 'flex',
+        flexDirection: 'column',
       }}
     >
-      <div className="booking-card-content">
-        <div><strong>{booking.deviceName}</strong></div>
-        <div>{formatTime(booking.startTime)} - {formatTime(booking.endTime)}</div>
-        <div className="booking-status">{booking.status}</div>
+      <div className="booking-card-content" style={{
+        padding: '15px',
+        color: '#333',   // Тёмный текст для контраста
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        height: '100%',
+      }}>
+        {/* Имя устройства */}
+        <div style={{
+          fontSize: '16px',
+          fontWeight: '600',   // Чуть жирнее для имени устройства
+          marginBottom: '5px',
+        }}>
+          {booking.deviceName}
+        </div>
+
+        {/* Статус доступности устройства */}
+        <div style={{
+          fontSize: '14px',
+          fontWeight: '500',
+          color: deviceStatusColor,  // Зеленый или красный цвет для доступности
+          marginBottom: '10px',
+        }}>
+          {deviceStatus}
+        </div>
+
+        {/* Время бронирования */}
+        <div style={{
+          fontSize: '14px',
+          color: '#777',   // Мягкий серый для времени
+          marginBottom: '10px',
+        }}>
+          {formatTime(booking.startTime)} - {formatTime(booking.endTime)}
+        </div>
+
+        {/* Статус бронирования */}
+        <div className="booking-status" style={{
+          fontSize: '14px', 
+          fontWeight: '500', 
+          color: '#5e5e5e', 
+          padding: '5px 10px', 
+          backgroundColor: '#f4f4f4', 
+          borderRadius: '8px', 
+          textAlign: 'center', 
+          marginTop: 'auto',   // Размещаем статус внизу карточки
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        }}>
+          {booking.status}
+        </div>
       </div>
     </div>
   );
