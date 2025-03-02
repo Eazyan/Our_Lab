@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./our-lab-backend
+    ports:
+      - "5001:5001"
+    depends_on:
+      - postgres
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres/ourlab
+    volumes:
+      - ./our-lab-backend:/app
+    restart: always
+
+  postgres:
+    image: postgres:latest
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=ourlab
+    ports:
+      - "5432:5432"
+
+  frontend:
+  build: ./our-lab-frontend
+  ports:
+    - "3000:3000"
+  volumes:
+    - ./our-lab-frontend:/app
+    - /app/node_modules
+  environment:
+    - REACT_APP_API_URL=http://backend:5001
+  restart: always
+
+volumes:
+  postgres_data: 

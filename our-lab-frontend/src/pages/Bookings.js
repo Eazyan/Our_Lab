@@ -28,40 +28,63 @@ const Bookings = () => {
     }, []);
   
     const handleBookingSuccess = async (startTime, endTime) => {
-        alert(`Прибор забронирован с ${startTime} до ${endTime}`);
+      console.log("handleBookingSuccess вызван с:", { deviceId: selectedDevice, startTime, endTime });
       
-        const selectedDeviceObj = devices.find((device) => device.id === selectedDevice);
-      
-        if (selectedDeviceObj) {
-          // Создаем объект для нового бронирования
-          const newBooking = {
-            deviceId: selectedDevice,
-            deviceName: selectedDeviceObj.name,
-            startTime,
-            endTime,
-            status: 'Ожидает подтверждения',  // Статус по умолчанию
-          };
-      
-          try {
-            // Отправляем POST запрос для сохранения на сервере
-            const response = await axios.post('http://localhost:5001/bookings', newBooking);
-      
-            // Обновляем список бронирований, добавляя новое
-            setBookings((prevBookings) => [
-              ...prevBookings,
-              response.data,  // Ответ от сервера, который содержит данные нового бронирования
-            ]);
-      
-            toast.success('Бронирование успешно создано!');
-          } catch (error) {
-            console.error('Ошибка при создании бронирования:', error);
-            toast.error('Не удалось создать бронирование.');
-          }
-        } else {
-          console.error('Прибор не найден');
+      try {
+        // Преобразуем deviceId в число
+        const deviceIdNumber = parseInt(selectedDevice, 10);
+        
+        if (isNaN(deviceIdNumber)) {
+          toast.error("Некорректный ID прибора");
+          return;
         }
-      };
-      
+        
+        // Получаем выбранный прибор
+        const selectedDeviceObj = devices.find((device) => device.id === deviceIdNumber);
+        
+        console.log("Доступные приборы:", devices);
+        console.log("Искомый ID прибора:", deviceIdNumber);
+        console.log("Найденный прибор:", selectedDeviceObj);
+        
+        if (!selectedDeviceObj) {
+          toast.error(`Прибор с ID ${deviceIdNumber} не найден`);
+          return;
+        }
+        
+        // Создаем объект для нового бронирования
+        const newBooking = {
+          device_id: deviceIdNumber,  // Используем числовой ID
+          start_time: new Date(startTime).toISOString(),
+          end_time: new Date(endTime).toISOString(),
+          status: 'Ожидает подтверждения',
+        };
+        
+        console.log("Отправляем запрос на создание бронирования:", newBooking);
+        
+        // Отправляем POST запрос
+        const response = await axios.post('http://localhost:5001/bookings', newBooking);
+        
+        console.log("Ответ от сервера:", response.data);
+        
+        // Обновляем список бронирований
+        setBookings((prevBookings) => [
+          ...prevBookings,
+          response.data,
+        ]);
+        
+        toast.success('Бронирование успешно создано!');
+      } catch (error) {
+        console.error('Ошибка при создании бронирования:', error);
+        
+        // Показываем более подробную информацию об ошибке
+        if (error.response) {
+          // Показываем ответ от сервера, если он есть
+          toast.error(`Ошибка: ${error.response.data.detail || error.message}`);
+        } else {
+          toast.error(`Ошибка: ${error.message}`);
+        }
+      }
+    };
       
     if (loading) return <div>Загрузка...</div>;
   
