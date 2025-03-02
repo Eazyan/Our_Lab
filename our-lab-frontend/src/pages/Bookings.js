@@ -1,44 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import BookingForm from '../components/Booking/BookingForm';
 import BookingHistory from '../components/Booking/BookingHistory';
-<<<<<<< HEAD
 import { getDevices, getBookings, apiUrl } from '../utils/api.js'; // Импортируем apiUrl
-=======
-import { getDevices, getBookings } from '../utils/api.js';
->>>>>>> origin/fixed
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
 const Bookings = () => {
     const [devices, setDevices] = useState([]);
-    const [selectedDevice, setSelectedDevice] = useState("");
+    const [selectedDevice, setSelectedDevice] = useState(""); // Изначально пустая строка
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
   
     useEffect(() => {
       const fetchData = async () => {
         try {
-          setLoading(true);
-          // Add debugging to see what's happening
-          console.log("Fetching devices and bookings...");
-          
-          // Fetch devices data
           const devicesData = await getDevices();
-          console.log("Devices loaded:", devicesData);
           setDevices(devicesData);
-          
-          // Fetch bookings data
-          const bookingsData = await getBookings();
-          console.log("Bookings loaded:", bookingsData);
+          const bookingsData = await getBookings(); // Загружаем историю бронирований
           setBookings(bookingsData);
         } catch (error) {
           console.error('Ошибка при загрузке данных:', error);
-          toast.error("Не удалось загрузить данные");
         } finally {
           setLoading(false);
         }
       };
-      
       fetchData();
     }, []);
   
@@ -68,7 +53,7 @@ const Bookings = () => {
         
         // Создаем объект для нового бронирования, используя поля, ожидаемые бэкендом
         const newBooking = {
-          device_id: deviceIdNumber,
+          device_id: deviceIdNumber,  // Для бэкенда используем snake_case
           start_time: new Date(startTime).toISOString(),
           end_time: new Date(endTime).toISOString(),
           status: 'Ожидает подтверждения',
@@ -103,6 +88,7 @@ const Bookings = () => {
         
         // Показываем более подробную информацию об ошибке
         if (error.response) {
+          // Показываем ответ от сервера, если он есть
           toast.error(`Ошибка: ${error.response.data.detail || error.message}`);
         } else {
           toast.error(`Ошибка: ${error.message}`);
@@ -111,9 +97,6 @@ const Bookings = () => {
     };
       
     if (loading) return <div>Загрузка...</div>;
-
-    // Add debugging output here
-    console.log("Rendering Bookings component with devices:", devices);
   
     return (
         <div>
@@ -122,21 +105,17 @@ const Bookings = () => {
             <h3>Выберите прибор:</h3>
             <select onChange={(e) => setSelectedDevice(e.target.value)} value={selectedDevice}>
               <option value="">Выберите прибор</option>
-              {devices && devices.length > 0 ? (
-                devices.map((device) => (
-                  <option key={device.id} value={device.id}>
-                    {device.name}
-                  </option>
-                ))
-              ) : (
-                <option disabled>Нет доступных приборов</option>
-              )}
+              {devices.map((device) => (
+                <option key={device.id} value={device.id}>
+                  {device.name}
+                </option>
+              ))}
             </select>
           </div>
           {selectedDevice && (
             <BookingForm deviceId={selectedDevice} onBookingSuccess={handleBookingSuccess} />
           )}
-          <BookingHistory bookings={bookings} devices={devices} />
+          <BookingHistory bookings={bookings} devices={devices} /> {/* Передаем устройства и бронирования */}
         </div>
       );
 };
