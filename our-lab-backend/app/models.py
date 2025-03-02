@@ -26,4 +26,3 @@ class Booking(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     
     device = relationship("Device", back_populates="bookings")
-

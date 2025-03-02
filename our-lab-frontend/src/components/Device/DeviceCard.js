@@ -1,39 +1,52 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { apiUrl } from '../../utils/api'; // Импортируем apiUrl
+import { toast } from 'react-toastify'; // Для уведомлений
+import 'react-toastify/dist/ReactToastify.css'; // Стили для уведомлений
+import axios from 'axios'; // Для отправки запросов на сервер
 
 const DeviceCard = ({ device, setDevices }) => {
-  const [status, setStatus] = useState(device.available ? 'Доступен' : 'Не доступен');
+  const [status, setStatus] = useState(device.available ? 'Доступен' : 'Недоступен'); // Статус устройства
 
-  // Функция для изменения статуса устройства
+  // Функция для изменения статуса
   const handleStatusChange = async () => {
-    const newStatus = status === 'Доступен' ? 'Не доступен' : 'Доступен';
-    setStatus(newStatus);
-
     try {
-      // Отправляем обновленный статус на сервер
-      await axios.patch(`${apiUrl}/devices/${device.id}`, { available: newStatus === 'Доступен' });
-      alert(`Статус прибора "${device.name}" изменен на: ${newStatus}`);
+      const newStatus = status === 'Доступен' ? 'Недоступен' : 'Доступен';
+      const updatedDevice = { ...device, available: newStatus === 'Доступен' };
       
-      // Обновляем состояние устройств в родительском компоненте
-      setDevices((prevDevices) =>
-        prevDevices.map((d) =>
-          d.id === device.id ? { ...d, available: newStatus === 'Доступен' } : d
-        )
+      // Отправляем запрос на сервер для обновления статуса
+      await axios.patch(`http://127.0.0.1:5001/devices/${device.id}`, updatedDevice); // Путь к API
+
+      // Обновляем статус в компоненте
+      setStatus(newStatus);
+      toast.success(`Статус устройства изменен на ${newStatus}`);
+      
+      // Обновляем список устройств
+      setDevices(prevDevices => 
+        prevDevices.map(dev => (dev.id === device.id ? { ...dev, available: updatedDevice.available } : dev))
       );
     } catch (error) {
-      console.error('Ошибка при обновлении статуса:', error);
-      alert('Не удалось обновить статус прибора.');
+      toast.error('Ошибка при изменении статуса устройства');
+    }
+  };
+
+  // Функция для удаления устройства
+  const handleDelete = async () => {
+    try {
+      await axios.delete(`http://127.0.0.1:5001/devices/${device.id}`); // Путь к API для удаления
+      setDevices(prevDevices => prevDevices.filter(dev => dev.id !== device.id)); // Убираем удалённое устройство из списка
+      toast.success('Устройство успешно удалено!');
+    } catch (error) {
+      toast.error('Ошибка при удалении устройства');
     }
   };
 
   return (
-    <div style={{ border: '1px solid #ddd', padding: '10px', marginBottom: '10px' }}>
+    <div className="device-card">
       <h3>{device.name}</h3>
-      <p><strong>Описание:</strong> {device.description}</p>
-      <p><strong>Доступность:</strong> {status}</p>
-      <p><strong>Характеристики:</strong> {device.characteristics}</p>
+      <p>{device.description}</p>
+      <p>{device.characteristics}</p>
+      <p>Статус: {status}</p>
       <button onClick={handleStatusChange}>Изменить статус</button>
+      <button onClick={handleDelete}>Удалить</button>
     </div>
   );
 };

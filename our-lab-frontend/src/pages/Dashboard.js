@@ -1,21 +1,32 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const userRole = localStorage.getItem('userRole'); // Получаем роль из localStorage
+
+  const handleLogout = () => {
+    localStorage.removeItem('userRole');
+    navigate('/');
+  };
+
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>Панель управления</h1>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '300px' }}>
-        <Link to="/devices" style={{ padding: '10px', background: '#f0f0f0', borderRadius: '5px', textDecoration: 'none', color: '#333' }}>
-          Список приборов
-        </Link>
-        <Link to="/bookings" style={{ padding: '10px', background: '#f0f0f0', borderRadius: '5px', textDecoration: 'none', color: '#333' }}>
-          Бронирования
-        </Link>
-        <Link to="/timeline" style={{ padding: '10px', background: '#f0f0f0', borderRadius: '5px', textDecoration: 'none', color: '#333' }}>
-          Расписание
-        </Link>
+    <div className="dashboard-container">
+      <h2>Добро пожаловать на панель управления</h2>
+
+      <div>
+        {userRole === 'student' && (
+          <p>Вы вошли как Студент. Вы можете только просматривать бронирования на таймлайне.</p>
+        )}
+        {userRole === 'teacher' && (
+          <p>Вы вошли как Преподаватель. Вы можете создавать бронирования и просматривать таймлайн.</p>
+        )}
+        {userRole === 'admin' && (
+          <p>Вы вошли как Администратор. Вы можете управлять всеми аспектами системы, включая добавление оборудования.</p>
+        )}
       </div>
+
+      <button onClick={handleLogout}>Выйти</button>
     </div>
   );
 };
