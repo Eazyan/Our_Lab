@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import BookingForm from '../components/Booking/BookingForm';
 import BookingHistory from '../components/Booking/BookingHistory';
-import { getDevices, getBookings } from '/Users/eazyan/Documents/Our_Lab/our-lab-frontend/src/utils/api.js'; // Для получения данных о приборах и бронированиях
+import { getDevices, getBookings } from '../utils/api.js'; // Для получения данных о приборах и бронированиях
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
@@ -28,40 +28,73 @@ const Bookings = () => {
     }, []);
   
     const handleBookingSuccess = async (startTime, endTime) => {
-        alert(`Прибор забронирован с ${startTime} до ${endTime}`);
+      console.log("handleBookingSuccess вызван с:", { deviceId: selectedDevice, startTime, endTime });
       
-        const selectedDeviceObj = devices.find((device) => device.id === selectedDevice);
-      
-        if (selectedDeviceObj) {
-          // Создаем объект для нового бронирования
-          const newBooking = {
-            deviceId: selectedDevice,
-            deviceName: selectedDeviceObj.name,
-            startTime,
-            endTime,
-            status: 'Ожидает подтверждения',  // Статус по умолчанию
-          };
-      
-          try {
-            // Отправляем POST запрос для сохранения на сервере
-            const response = await axios.post('http://localhost:5001/bookings', newBooking);
-      
-            // Обновляем список бронирований, добавляя новое
-            setBookings((prevBookings) => [
-              ...prevBookings,
-              response.data,  // Ответ от сервера, который содержит данные нового бронирования
-            ]);
-      
-            toast.success('Бронирование успешно создано!');
-          } catch (error) {
-            console.error('Ошибка при создании бронирования:', error);
-            toast.error('Не удалось создать бронирование.');
-          }
-        } else {
-          console.error('Прибор не найден');
+      try {
+        // Преобразуем deviceId в число
+        const deviceIdNumber = parseInt(selectedDevice, 10);
+        
+        if (isNaN(deviceIdNumber)) {
+          toast.error("Некорректный ID прибора");
+          return;
         }
-      };
-      
+        
+        // Получаем выбранный прибор
+        const selectedDeviceObj = devices.find((device) => device.id === deviceIdNumber);
+        
+        console.log("Доступные приборы:", devices);
+        console.log("Искомый ID прибора:", deviceIdNumber);
+        console.log("Найденный прибор:", selectedDeviceObj);
+        
+        if (!selectedDeviceObj) {
+          toast.error(`Прибор с ID ${deviceIdNumber} не найден`);
+          return;
+        }
+        
+        // Создаем объект для нового бронирования, используя поля, ожидаемые бэкендом
+        const newBooking = {
+          device_id: deviceIdNumber,  // Для бэкенда используем snake_case
+          start_time: new Date(startTime).toISOString(),
+          end_time: new Date(endTime).toISOString(),
+          status: 'Ожидает подтверждения',
+        };
+        
+        console.log("Отправляем запрос на создание бронирования:", newBooking);
+        
+        // Отправляем POST запрос
+        const response = await axios.post('http://localhost:5001/bookings', newBooking);
+        
+        console.log("Ответ от сервера:", response.data);
+        
+        // Преобразуем ответ от сервера для соответствия формату фронтенда
+        const bookingForFrontend = {
+          id: response.data.id,
+          deviceId: response.data.device_id,
+          deviceName: selectedDeviceObj.name,
+          startTime: response.data.start_time,
+          endTime: response.data.end_time,
+          status: response.data.status
+        };
+        
+        // Обновляем список бронирований
+        setBookings((prevBookings) => [
+          ...prevBookings,
+          bookingForFrontend,
+        ]);
+        
+        toast.success('Бронирование успешно создано!');
+      } catch (error) {
+        console.error('Ошибка при создании бронирования:', error);
+        
+        // Показываем более подробную информацию об ошибке
+        if (error.response) {
+          // Показываем ответ от сервера, если он есть
+          toast.error(`Ошибка: ${error.response.data.detail || error.message}`);
+        } else {
+          toast.error(`Ошибка: ${error.message}`);
+        }
+      }
+    };
       
     if (loading) return <div>Загрузка...</div>;
   
