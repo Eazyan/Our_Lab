@@ -16,7 +16,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "HTTPS=false react-scripts start",
+    "start:windows": "set HTTPS=false&&react-scripts start",
     "server": "json-server --watch db.json --port 5001",
     "build": "react-scripts build",
     "test": "react-scripts test",

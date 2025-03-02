@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import BookingForm from '../components/Booking/BookingForm';
 import BookingHistory from '../components/Booking/BookingHistory';
-import { getDevices, getBookings } from '../utils/api.js'; // Для получения данных о приборах и бронированиях
+import { getDevices, getBookings, apiUrl } from '../utils/api.js'; // Импортируем apiUrl
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
@@ -62,7 +62,7 @@ const Bookings = () => {
         console.log("Отправляем запрос на создание бронирования:", newBooking);
         
         // Отправляем POST запрос
-        const response = await axios.post('http://localhost:5001/bookings', newBooking);
+        const response = await axios.post(`${apiUrl}/bookings`, newBooking);
         
         console.log("Ответ от сервера:", response.data);
         

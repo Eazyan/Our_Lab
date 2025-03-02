@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 import time
 import psycopg2
 import os
+from sqlalchemy import text
 
 def wait_for_db():
     db_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@postgres/ourlab")
@@ -42,10 +43,10 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Our Lab API")
 
-# Настройка CORS для работы с фронтендом
+# Make sure CORS is properly configured
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://frontend:3000"],  # Добавляем имя контейнера
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://frontend:3000"],  # Add all possible frontend URLs
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -72,3 +73,31 @@ def debug_devices(db: Session = Depends(get_db)):
             "description": device.description
         })
     return result
+
+@app.get("/debug/clear-db")
+def clear_database(db: Session = Depends(get_db)):
+    """Эндпоинт для очистки базы данных (только для отладки)"""
+    try:
+        # Удаляем все бронирования сначала (из-за внешних ключей)
+        db.query(models.Booking).delete()
+        
+        # Затем удаляем все устройства
+        db.query(models.Device).delete()
+        
+        # Сбрасываем последовательности ID - используем text() для явного определения SQL
+        db.execute(text("ALTER SEQUENCE bookings_id_seq RESTART WITH 1"))
+        db.execute(text("ALTER SEQUENCE devices_id_seq RESTART WITH 1"))
+        
+        # Коммитим изменения
+        db.commit()
+        
+        return {
+            "status": "success", 
+            "message": "База данных успешно очищена и счетчики ID сброшены"
+        }
+    except Exception as e:
+        db.rollback()
+        return {
+            "status": "error", 
+            "message": f"Ошибка при очистке базы данных: {str(e)}"
+        }

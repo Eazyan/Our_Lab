@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { apiUrl } from '../../utils/api'; // Импортируем apiUrl
 
 const DeviceCard = ({ device, setDevices }) => {
   const [status, setStatus] = useState(device.available ? 'Доступен' : 'Не доступен');
@@ -11,7 +12,7 @@ const DeviceCard = ({ device, setDevices }) => {
 
     try {
       // Отправляем обновленный статус на сервер
-      await axios.patch(`http://localhost:5001/devices/${device.id}`, { available: newStatus === 'Доступен' });
+      await axios.patch(`${apiUrl}/devices/${device.id}`, { available: newStatus === 'Доступен' });
       alert(`Статус прибора "${device.name}" изменен на: ${newStatus}`);
     } catch (error) {
       console.error('Ошибка при обновлении статуса:', error);

@@ -9,6 +9,7 @@ import DeviceList from './pages/DeviceList';
 import Bookings from './pages/Bookings';
 import axios from 'axios';
 import Timeline from './pages/Timeline';
+import { apiUrl } from './utils/api'; // Импортируем apiUrl
 
 function App() {
   const [bookings, setBookings] = useState([]);
@@ -17,8 +18,8 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const bookingsData = await axios.get('http://localhost:5001/bookings');
-        const devicesData = await axios.get('http://localhost:5001/devices');
+        const bookingsData = await axios.get(`${apiUrl}/bookings`);
+        const devicesData = await axios.get(`${apiUrl}/devices`);
         setBookings(bookingsData.data);
         setDevices(devicesData.data);
       } catch (error) {

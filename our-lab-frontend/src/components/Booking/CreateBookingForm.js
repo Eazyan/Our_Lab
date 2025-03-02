@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { apiUrl } from '../../utils/api';
 
 const CreateBookingForm = ({ devices, setBookings }) => {
   const [selectedDevice, setSelectedDevice] = useState('');
@@ -26,7 +27,7 @@ const CreateBookingForm = ({ devices, setBookings }) => {
 
     try {
       // Отправляем запрос на сервер
-      const response = await axios.post('http://localhost:5001/bookings', newBooking);
+      const response = await axios.post(`${apiUrl}/bookings`, newBooking);
 
       // Обновляем список бронирований на фронте
       setBookings((prevBookings) => [...prevBookings, response.data]);

@@ -1,7 +1,11 @@
 import axios from 'axios';
 
-// Изменяем apiUrl для работы в Docker-окружении
-const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+// Изменяем apiUrl для работы в локальной среде разработки
+// Используем localhost вместо backend
+const apiUrl = 'http://localhost:5001';
+
+// Экспортируем apiUrl для использования в других компонентах
+export { apiUrl };
 
 // Получение списка приборов
 export const getDevices = async () => {
