@@ -51,11 +51,18 @@ const Bookings = () => {
           return;
         }
         
+        // Время уже приходит в формате ISO из нашей формы
+        // Не нужно создавать объекты Date дополнительно
+        
+        // Выводим логи для отладки
+        console.log("Оригинальное время (ISO):", { startTime, endTime });
+        console.log("Часовой пояс клиента: UTC" + new Date().getTimezoneOffset() / -60);
+        
         // Создаем объект для нового бронирования, используя поля, ожидаемые бэкендом
         const newBooking = {
           device_id: deviceIdNumber,  // Для бэкенда используем snake_case
-          start_time: new Date(startTime).toISOString(),
-          end_time: new Date(endTime).toISOString(),
+          start_time: startTime,  // Время уже в формате ISO из нашей формы
+          end_time: endTime,  // Время уже в формате ISO из нашей формы
           status: 'Ожидает подтверждения',
         };
         

@@ -7,19 +7,34 @@ const BookingHistory = ({ bookings, devices }) => {
     if (!dateString) return 'Дата не указана';
     
     try {
+      console.log('Форматирую дату:', dateString);
       const date = new Date(dateString);
+      
       // Проверяем, что дата валидна
       if (isNaN(date.getTime())) {
         console.error('Невалидная дата:', dateString);
         return 'Некорректная дата';
       }
-      return date.toLocaleString('ru-RU', {
+      
+      // Получаем реальную дату и время (с учетом часового пояса)
+      const utcDate = date.toUTCString();
+      const localDate = date.toString();
+      
+      console.log('Исходная дата (UTC):', utcDate);
+      console.log('Локальная дата:', localDate);
+      
+      // Форматируем дату в локальном формате
+      // Используем Intl.DateTimeFormat для более надежного форматирования
+      const formatter = new Intl.DateTimeFormat('ru-RU', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        hour12: false
       });
+      
+      return formatter.format(date);
     } catch (error) {
       console.error('Ошибка при форматировании даты:', error);
       return 'Ошибка даты';

@@ -44,12 +44,21 @@ export const createBooking = async (deviceId, startTime, endTime) => {
     
     const selectedDevice = selectedDeviceResponse.data;
     
+    // Создаем объекты дат и применяем коррекцию часового пояса
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+    
+    // Преобразуем в локальное время без смещения UTC
+    // Создаем строку в формате YYYY-MM-DDTHH:MM:SS
+    const localStartTime = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}T${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}:00`;
+    const localEndTime = `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}T${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}:00`;
+    
     // Создаем новое бронирование, включая имя прибора и статус
     const newBooking = {
       device_id: parseInt(deviceId), // Убедитесь, что device_id передается как число
       deviceName: selectedDevice.name, // Для совместимости с фронтендом
-      start_time: new Date(startTime).toISOString(), // Преобразуем в ISO формат
-      end_time: new Date(endTime).toISOString(), // Преобразуем в ISO формат
+      start_time: localStartTime, // Используем локальное время без UTC преобразования
+      end_time: localEndTime, // Используем локальное время без UTC преобразования
       status: 'Ожидает подтверждения', // Статус по умолчанию
     };
     

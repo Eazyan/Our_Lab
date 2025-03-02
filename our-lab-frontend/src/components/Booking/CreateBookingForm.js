@@ -46,6 +46,7 @@ const CreateBookingForm = ({ devices, setBookings }) => {
   return (
     <form onSubmit={handleSubmit}>
       <h2>Создать новое бронирование</h2>
+      <p style={{color: 'gray', fontSize: '0.9em'}}>Примечание: бронирование доступно только в рабочее время с 8:30 до 17:00</p>
       <label>
         Выберите прибор:
         <select

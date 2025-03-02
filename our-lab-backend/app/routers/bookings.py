@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
+from datetime import datetime, timezone
+import pytz
 
 from ..database import get_db
 from .. import models, schemas
@@ -44,11 +46,15 @@ def create_booking(booking: schemas.BookingCreate, db: Session = Depends(get_db)
     if not device:
         raise HTTPException(status_code=404, detail=f"Прибор с ID {booking.device_id} не найден")
     
-    # Проверяем, что время бронирования находится в рабочие часы (8:30 - 17:00)
+    # Получаем время из запроса
     start_time = booking.start_time
     end_time = booking.end_time
     
-    # Извлекаем часы и минуты
+    # Выводим время для отладки
+    print(f"Полученное время от клиента: Начало={start_time}, Конец={end_time}")
+    
+    # Больше не преобразуем время, так как фронтенд уже корректирует часовой пояс
+    # Извлекаем часы и минуты прямо из полученного времени
     start_hour = start_time.hour
     start_minute = start_time.minute
     end_hour = end_time.hour
@@ -58,17 +64,19 @@ def create_booking(booking: schemas.BookingCreate, db: Session = Depends(get_db)
     start_time_minutes = start_hour * 60 + start_minute
     end_time_minutes = end_hour * 60 + end_minute
     
-    # Время начала рабочего дня: 8:30 (8 часов * 60 + 30 минут = 510 минут)
-    business_start_minutes = 8 * 60 + 30
-    # Время окончания рабочего дня: 17:00 (17 часов * 60 = 1020 минут)
-    business_end_minutes = 17 * 60
+    # Правила рабочего времени
+    business_start_minutes = 8 * 60 + 30  # 8:30 = 510 минут
+    business_end_minutes = 17 * 60        # 17:00 = 1020 минут
     
-    # Проверяем, что бронирование полностью находится в рабочее время
-    if (start_time_minutes < business_start_minutes or 
-        end_time_minutes > business_end_minutes):
+    print(f"Время в минутах: Начало={start_time_minutes}, Конец={end_time_minutes}")
+    print(f"Рабочее время: {business_start_minutes}-{business_end_minutes}")
+    
+    # Проверяем время только по часам и минутам, без учета часового пояса
+    # Это предотвращает проблемы с разными часовыми поясами
+    if start_time_minutes < business_start_minutes or end_time_minutes > business_end_minutes:
         raise HTTPException(
             status_code=400, 
-            detail="Бронирование возможно только в рабочее время с 8:30 до 17:00"
+            detail=f"Бронирование возможно только в рабочее время с 8:30 до 17:00. Ваше время: {start_hour}:{start_minute}-{end_hour}:{end_minute}"
         )
     
     # Проверяем доступность времени
