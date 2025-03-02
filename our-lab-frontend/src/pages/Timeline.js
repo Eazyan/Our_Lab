@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Timeline.css';
-import { getBookings } from '/Users/eazyan/Documents/Our_Lab/our-lab-frontend/src/utils/api.js'; // Для получения бронирований
+import { getBookings } from '../utils/api.js'; // Для получения бронирований
 
 const Timeline = () => {
   const startTime = 8;  // Начало времени (8:00)

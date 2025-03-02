@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import BookingForm from '../components/Booking/BookingForm';
 import BookingHistory from '../components/Booking/BookingHistory';
-import { getDevices, getBookings } from '/Users/eazyan/Documents/Our_Lab/our-lab-frontend/src/utils/api.js'; // Для получения данных о приборах и бронированиях
+import { getDevices, getBookings } from '../utils/api.js'; // Для получения данных о приборах и бронированиях
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
