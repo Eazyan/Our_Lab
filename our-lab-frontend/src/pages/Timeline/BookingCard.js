@@ -2,11 +2,11 @@ import React from 'react';
 import { formatTime, getRandomColor } from './utils';
 
 const BookingCard = ({ booking, bookingStart, bookingEnd }) => {
-  // Начало и конец рабочего дня (8:00 - 17:00)
+  // Начало и конец рабочего дня (например, с 8:00 до 17:00)
   const dayStartHour = 8;
   const dayEndHour = 17;
 
-  // Длительность дня в минутах (с 8:00 до 17:00)
+  // Длительность рабочего дня в минутах (с 8:00 до 17:00)
   const dayLengthMinutes = (dayEndHour - dayStartHour) * 60;
 
   // Время начала и окончания бронирования в минутах от 8:00
@@ -18,22 +18,27 @@ const BookingCard = ({ booking, bookingStart, bookingEnd }) => {
   const startTimeMinutes = (startHour - dayStartHour) * 60 + startMinute;
   const endTimeMinutes = (endHour - dayStartHour) * 60 + endMinute;
 
-  // Рассчитываем позицию карточки по оси Y (в процентах)
-  const top = (startTimeMinutes / dayLengthMinutes) * 100;
+  // Рассчитываем длительность бронирования в минутах
+  const durationInMinutes = endTimeMinutes - startTimeMinutes;
 
-  // Рассчитываем высоту карточки (в процентах) — разница между временем начала и окончания
-  const height = ((endTimeMinutes - startTimeMinutes) / dayLengthMinutes) * 100;
+  // Местоположение карточки на шкале времени (положение верха)
+  const topPosition = (startTimeMinutes / dayLengthMinutes) * 100; // Расположить по шкале времени
 
-  // Получаем цвет для карточки
+  // Рассчитываем высоту карточки (400% для 2 часов)
+  // Пропорция: для 2 часов = 400%, для 1 часа = 200%, для 30 минут = 100%
+  const height = (durationInMinutes / (60 * 2)) * 400;
+
+  // Получаем цвет для карточки на основе устройства
   const backgroundColor = getRandomColor(booking.deviceName);
 
   return (
     <div
       className="booking-card"
       style={{
-        top: `${top}%`, // Позиция сверху
-        height: `${height}%`, // Высота карточки
-        backgroundColor, // Цвет карточки
+        position: 'absolute',
+        top: `${topPosition}%`,  // Позиция сверху на шкале времени
+        height: `${height}%`,    // Высота пропорциональна длительности
+        backgroundColor,        // Цвет карточки
       }}
     >
       <div className="booking-card-content">
