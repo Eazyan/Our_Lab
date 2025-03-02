@@ -1,7 +1,35 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import BookingCard from './BookingCard';
 
 const TimelineView = ({ timeSlots, selectedDate, filteredBookings }) => {
+  // Pre-process bookings to map them to time slots
+  const bookingsBySlot = useMemo(() => {
+    const slotMap = {};
+    
+    timeSlots.forEach(slot => {
+      slotMap[slot] = [];
+    });
+    
+    filteredBookings.forEach(booking => {
+      const bookingStart = new Date(booking.startTime);
+      const bookingStartHour = bookingStart.getHours();
+      const bookingStartMinute = bookingStart.getMinutes();
+      
+      let slotKey;
+      if (bookingStartMinute < 30) {
+        slotKey = `${bookingStartHour}:00`;
+      } else {
+        slotKey = `${bookingStartHour}:30`;
+      }
+      
+      if (slotMap[slotKey]) {
+        slotMap[slotKey].push(booking);
+      }
+    });
+    
+    return slotMap;
+  }, [timeSlots, filteredBookings]);
+  
   return (
     <div className="timeline">
       <div className="timeline-header">
@@ -16,31 +44,18 @@ const TimelineView = ({ timeSlots, selectedDate, filteredBookings }) => {
           <div key={slot} className="timeline-row">
             <div className="timeline-time">{slot}</div>
             <div className="timeline-cell">
-              {filteredBookings.map((booking) => {
+              {bookingsBySlot[slot].map((booking) => {
                 const bookingStart = new Date(booking.startTime);
                 const bookingEnd = new Date(booking.endTime);
                 
-                // Check if booking should appear in this time slot
-                const slotHour = parseInt(slot.split(':')[0]);
-                const slotMinute = parseInt(slot.split(':')[1] || 0);
-                
-                const bookingStartHour = bookingStart.getHours();
-                const bookingStartMinute = bookingStart.getMinutes();
-                
-                // Show booking card at its start position
-                if (slotHour === bookingStartHour && 
-                    (slotMinute === 0 && bookingStartMinute < 30 || 
-                     slotMinute === 30 && bookingStartMinute >= 30)) {
-                  return (
-                    <BookingCard 
-                      key={booking.id}
-                      booking={booking}
-                      bookingStart={bookingStart}
-                      bookingEnd={bookingEnd}
-                    />
-                  );
-                }
-                return null;
+                return (
+                  <BookingCard 
+                    key={booking.id}
+                    booking={booking}
+                    bookingStart={bookingStart}
+                    bookingEnd={bookingEnd}
+                  />
+                );
               })}
             </div>
           </div>
@@ -50,4 +65,4 @@ const TimelineView = ({ timeSlots, selectedDate, filteredBookings }) => {
   );
 };
 
-export default TimelineView; 
+export default React.memo(TimelineView); 

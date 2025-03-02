@@ -1,27 +1,72 @@
 import axios from 'axios';
 
-// Изменяем apiUrl для работы в Docker-окружении
+// Change this to use localhost instead of backend hostname
+// This will match what your browser can actually access
 const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
-// Получение списка приборов
+// Cache for devices
+let devicesCache = null;
+let lastDevicesFetchTime = 0;
+const DEVICE_CACHE_DURATION = 30000; // 30 seconds
+
+// Cache for bookings
+let bookingsCache = null;
+let lastBookingsFetchTime = 0;
+const BOOKING_CACHE_DURATION = 15000; // 15 seconds
+
+// Get all devices with proper error handling
 export const getDevices = async () => {
+  const now = Date.now();
+  
+  // Return cached data if it's fresh enough
+  if (devicesCache && (now - lastDevicesFetchTime < DEVICE_CACHE_DURATION)) {
+    console.log("Using cached devices data");
+    return devicesCache;
+  }
+  
   try {
-    const response = await axios.get(`${apiUrl}/devices`);
-    return response.data;
+    console.log("Fetching devices from API");
+    // Make sure to use the trailing slash
+    const response = await axios.get(`${apiUrl}/devices/`);
+    console.log("Devices API response:", response.data);
+    
+    // Update cache
+    devicesCache = response.data || [];
+    lastDevicesFetchTime = now;
+    
+    return devicesCache;
   } catch (error) {
     console.error("Ошибка при получении приборов:", error);
-    throw error;
+    // Return empty array on error instead of cached data (which might be null)
+    return [];
   }
 };
 
-// Получение списка бронирований
+// Get all bookings with proper error handling
 export const getBookings = async () => {
+  const now = Date.now();
+  
+  // Return cached data if it's fresh enough
+  if (bookingsCache && (now - lastBookingsFetchTime < BOOKING_CACHE_DURATION)) {
+    console.log("Using cached bookings data");
+    return bookingsCache;
+  }
+  
   try {
-    const response = await axios.get(`${apiUrl}/bookings`);
-    return response.data;
+    console.log("Fetching bookings from API");
+    // Make sure to use the trailing slash
+    const response = await axios.get(`${apiUrl}/bookings/`);
+    console.log("Bookings API response:", response.data);
+    
+    // Update cache
+    bookingsCache = response.data || [];
+    lastBookingsFetchTime = now;
+    
+    return bookingsCache;
   } catch (error) {
-    console.error('Ошибка при получении бронирований:', error);
-    throw error;
+    console.error("Ошибка при получении бронирований:", error);
+    // Return empty array on error
+    return [];
   }
 };
 

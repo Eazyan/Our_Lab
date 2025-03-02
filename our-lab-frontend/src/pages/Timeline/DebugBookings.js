@@ -1,11 +1,13 @@
 import React from 'react';
 import { formatDate, formatTime } from './utils';
 
-const DebugBookings = ({ bookings }) => {
+const DebugBookings = ({ bookings, error }) => {
   return (
     <div className="debug-bookings">
-      <h3>Отладка: Все бронирования ({bookings.length})</h3>
-      {bookings.length === 0 ? (
+      <h3>Отладка: Все бронирования ({bookings?.length || 0})</h3>
+      {error ? (
+        <p className="error-message">Ошибка: {error}</p>
+      ) : bookings.length === 0 ? (
         <p>Нет бронирований</p>
       ) : (
         <ul>
