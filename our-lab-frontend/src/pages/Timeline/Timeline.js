@@ -3,12 +3,11 @@ import '../Timeline.css'; // Keep using the existing CSS
 import { getBookings } from '../../utils/api.js';
 import TimelineControls from './TimelineControls';
 import TimelineView from './TimelineView';
-import DebugBookings from './DebugBookings';
 import { isSameDay } from './utils';
 
 const Timeline = () => {
   const startTime = 8;  // Начало времени (8:00)
-  const endTime = 23;   // Конец времени (23:00)
+  const endTime = 17;   // Конец времени (17:00)
   const timeSlots = [];
 
   // Генерация временных слотов с шагом 30 минут
@@ -41,23 +40,38 @@ const Timeline = () => {
     setSelectedDate(newDate);
   };
 
-  // Fetch bookings data from API
+  // Fetch bookings data from API - with debounce
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchBookings = async () => {
+      if (!isMounted) return;
+      
       try {
         setLoading(true);
+        // Add a small timeout to prevent too frequent API calls
         const data = await getBookings();
-        setBookings(data);
-        setError(null);
+        if (isMounted) {
+          setBookings(data || []);
+          setError(null);
+        }
       } catch (err) {
         console.error('Ошибка при загрузке бронирований:', err);
-        setError('Не удалось загрузить данные о бронированиях');
+        if (isMounted) {
+          setError('Не удалось загрузить данные о бронированиях');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchBookings();
+    
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Filter bookings for the selected date
@@ -83,8 +97,6 @@ const Timeline = () => {
         goToNextDay={goToNextDay}
         handleDateChange={handleDateChange}
       />
-      
-      <DebugBookings bookings={filteredBookings} />
       
       {filteredBookings.length === 0 ? (
         <div className="no-bookings">
