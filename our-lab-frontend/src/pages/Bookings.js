@@ -51,9 +51,9 @@ const Bookings = () => {
           return;
         }
         
-        // Создаем объект для нового бронирования
+        // Создаем объект для нового бронирования, используя поля, ожидаемые бэкендом
         const newBooking = {
-          device_id: deviceIdNumber,  // Используем числовой ID
+          device_id: deviceIdNumber,  // Для бэкенда используем snake_case
           start_time: new Date(startTime).toISOString(),
           end_time: new Date(endTime).toISOString(),
           status: 'Ожидает подтверждения',
@@ -66,10 +66,20 @@ const Bookings = () => {
         
         console.log("Ответ от сервера:", response.data);
         
+        // Преобразуем ответ от сервера для соответствия формату фронтенда
+        const bookingForFrontend = {
+          id: response.data.id,
+          deviceId: response.data.device_id,
+          deviceName: selectedDeviceObj.name,
+          startTime: response.data.start_time,
+          endTime: response.data.end_time,
+          status: response.data.status
+        };
+        
         // Обновляем список бронирований
         setBookings((prevBookings) => [
           ...prevBookings,
-          response.data,
+          bookingForFrontend,
         ]);
         
         toast.success('Бронирование успешно создано!');
