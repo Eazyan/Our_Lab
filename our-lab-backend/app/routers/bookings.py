@@ -15,71 +15,53 @@ router = APIRouter(
 @router.get("/", response_model=List[dict])
 def get_bookings(db: Session = Depends(get_db)):
     bookings = db.query(models.Booking).all()
-    
-    # Преобразуем формат данных под ожидания фронтенда
     result = []
     for booking in bookings:
         device = db.query(models.Device).filter(models.Device.id == booking.device_id).first()
-        
-        # Используем model_validate вместо from_orm и model_dump вместо dict
         booking_dict = schemas.Booking.model_validate(booking).model_dump()
-        
-        # Адаптируем имена полей для фронтенда
         booking_response = {
             "id": booking.id,
-            "deviceId": booking.device_id,  # Изменили device_id на deviceId для фронтенда
+            "deviceId": booking.device_id,
             "deviceName": device.name if device else "Неизвестный прибор",
-            "startTime": booking.start_time.isoformat(),  # Форматируем дату в ISO
-            "endTime": booking.end_time.isoformat(),  # Форматируем дату в ISO
+            "startTime": booking.start_time.isoformat(),
+            "endTime": booking.end_time.isoformat(),
             "status": booking.status,
             "created_at": booking.created_at.isoformat() if booking.created_at else None
         }
-        
         result.append(booking_response)
-    
     return result
 
 @router.post("/", response_model=schemas.Booking, status_code=status.HTTP_201_CREATED)
 def create_booking(booking: schemas.BookingCreate, db: Session = Depends(get_db)):
-    # Проверяем существование устройства
     device = db.query(models.Device).filter(models.Device.id == booking.device_id).first()
     if not device:
         raise HTTPException(status_code=404, detail=f"Прибор с ID {booking.device_id} не найден")
     
-    # Получаем время из запроса
     start_time = booking.start_time
     end_time = booking.end_time
     
-    # Выводим время для отладки
     print(f"Полученное время от клиента: Начало={start_time}, Конец={end_time}")
     
-    # Больше не преобразуем время, так как фронтенд уже корректирует часовой пояс
-    # Извлекаем часы и минуты прямо из полученного времени
     start_hour = start_time.hour
     start_minute = start_time.minute
     end_hour = end_time.hour
     end_minute = end_time.minute
     
-    # Переводим в минуты для удобства сравнения
     start_time_minutes = start_hour * 60 + start_minute
     end_time_minutes = end_hour * 60 + end_minute
     
-    # Правила рабочего времени
-    business_start_minutes = 8 * 60 + 30  # 8:30 = 510 минут
-    business_end_minutes = 17 * 60        # 17:00 = 1020 минут
+    business_start_minutes = 8 * 60 + 30
+    business_end_minutes = 17 * 60
     
     print(f"Время в минутах: Начало={start_time_minutes}, Конец={end_time_minutes}")
     print(f"Рабочее время: {business_start_minutes}-{business_end_minutes}")
     
-    # Проверяем время только по часам и минутам, без учета часового пояса
-    # Это предотвращает проблемы с разными часовыми поясами
     if start_time_minutes < business_start_minutes or end_time_minutes > business_end_minutes:
         raise HTTPException(
             status_code=400, 
             detail=f"Бронирование возможно только в рабочее время с 8:30 до 17:00. Ваше время: {start_hour}:{start_minute}-{end_hour}:{end_minute}"
         )
     
-    # Проверяем доступность времени
     overlapping_bookings = db.query(models.Booking).filter(
         models.Booking.device_id == booking.device_id,
         models.Booking.end_time > booking.start_time,
@@ -94,7 +76,6 @@ def create_booking(booking: schemas.BookingCreate, db: Session = Depends(get_db)
     db.commit()
     db.refresh(new_booking)
     
-    # Формируем ответ с добавлением имени устройства
     response = schemas.Booking.model_validate(new_booking).model_dump()
     response["device_name"] = device.name
     

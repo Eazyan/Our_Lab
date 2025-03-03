@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
-# Device schemas
 class DeviceBase(BaseModel):
     name: str
     description: Optional[str] = None
@@ -24,7 +23,6 @@ class Device(DeviceBase):
     class Config:
         from_attributes = True
 
-# Booking schemas
 class BookingBase(BaseModel):
     device_id: int
     start_time: datetime
@@ -42,7 +40,7 @@ class BookingUpdate(BaseModel):
 class Booking(BookingBase):
     id: int
     created_at: datetime
-    device_name: Optional[str] = None  # Для совместимости с текущим фронтендом
+    device_name: Optional[str] = None 
 
     class Config:
         from_attributes = True

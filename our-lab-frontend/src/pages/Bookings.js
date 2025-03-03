@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import BookingForm from '../components/Booking/BookingForm';
 import BookingHistory from '../components/Booking/BookingHistory';
-import { getDevices, getBookings, apiUrl } from '../utils/api.js'; // Импортируем apiUrl
+import { getDevices, getBookings, apiUrl } from '../utils/api.js'; 
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
 const Bookings = () => {
     const [devices, setDevices] = useState([]);
-    const [selectedDevice, setSelectedDevice] = useState(""); // Изначально пустая строка
+    const [selectedDevice, setSelectedDevice] = useState("");
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
   
@@ -16,7 +16,7 @@ const Bookings = () => {
         try {
           const devicesData = await getDevices();
           setDevices(devicesData);
-          const bookingsData = await getBookings(); // Загружаем историю бронирований
+          const bookingsData = await getBookings(); 
           setBookings(bookingsData);
         } catch (error) {
           console.error('Ошибка при загрузке данных:', error);
@@ -31,7 +31,6 @@ const Bookings = () => {
       console.log("handleBookingSuccess вызван с:", { deviceId: selectedDevice, startTime, endTime });
       
       try {
-        // Преобразуем deviceId в число
         const deviceIdNumber = parseInt(selectedDevice, 10);
         
         if (isNaN(deviceIdNumber)) {
@@ -39,7 +38,6 @@ const Bookings = () => {
           return;
         }
         
-        // Получаем выбранный прибор
         const selectedDeviceObj = devices.find((device) => device.id === deviceIdNumber);
         
         console.log("Доступные приборы:", devices);
@@ -51,29 +49,22 @@ const Bookings = () => {
           return;
         }
         
-        // Время уже приходит в формате ISO из нашей формы
-        // Не нужно создавать объекты Date дополнительно
-        
-        // Выводим логи для отладки
         console.log("Оригинальное время (ISO):", { startTime, endTime });
         console.log("Часовой пояс клиента: UTC" + new Date().getTimezoneOffset() / -60);
         
-        // Создаем объект для нового бронирования, используя поля, ожидаемые бэкендом
         const newBooking = {
-          device_id: deviceIdNumber,  // Для бэкенда используем snake_case
-          start_time: startTime,  // Время уже в формате ISO из нашей формы
-          end_time: endTime,  // Время уже в формате ISO из нашей формы
+          device_id: deviceIdNumber,
+          start_time: startTime,
+          end_time: endTime,
           status: 'Ожидает подтверждения',
         };
         
         console.log("Отправляем запрос на создание бронирования:", newBooking);
         
-        // Отправляем POST запрос
         const response = await axios.post(`${apiUrl}/bookings`, newBooking);
         
         console.log("Ответ от сервера:", response.data);
         
-        // Преобразуем ответ от сервера для соответствия формату фронтенда
         const bookingForFrontend = {
           id: response.data.id,
           deviceId: response.data.device_id,
@@ -83,7 +74,6 @@ const Bookings = () => {
           status: response.data.status
         };
         
-        // Обновляем список бронирований
         setBookings((prevBookings) => [
           ...prevBookings,
           bookingForFrontend,
@@ -93,9 +83,7 @@ const Bookings = () => {
       } catch (error) {
         console.error('Ошибка при создании бронирования:', error);
         
-        // Показываем более подробную информацию об ошибке
         if (error.response) {
-          // Показываем ответ от сервера, если он есть
           toast.error(`Ошибка: ${error.response.data.detail || error.message}`);
         } else {
           toast.error(`Ошибка: ${error.message}`);
@@ -122,7 +110,7 @@ const Bookings = () => {
           {selectedDevice && (
             <BookingForm deviceId={selectedDevice} onBookingSuccess={handleBookingSuccess} />
           )}
-          <BookingHistory bookings={bookings} devices={devices} /> {/* Передаем устройства и бронирования */}
+          <BookingHistory bookings={bookings} devices={devices} />
         </div>
       );
 };

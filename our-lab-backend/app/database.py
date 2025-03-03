@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Получение URL базы данных из переменных окружения или использование значения по умолчанию
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@postgres/ourlab")
 
 engine = create_engine(DATABASE_URL)
@@ -14,7 +13,6 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-# Dependency
 def get_db():
     db = SessionLocal()
     try:
