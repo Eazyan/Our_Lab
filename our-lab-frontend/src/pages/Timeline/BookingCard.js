@@ -2,94 +2,57 @@ import React from 'react';
 import { formatTime, getRandomColor } from './utils';
 
 const BookingCard = ({ booking, bookingStart, bookingEnd }) => {
-  const dayStartHour = 8;
-  const dayEndHour = 17;
+  console.log('Рендеринг карточки бронирования:', {
+    booking,
+    startTime: bookingStart,
+    endTime: bookingEnd
+  });
 
-  const dayLengthMinutes = (dayEndHour - dayStartHour) * 60;
+  // Получаем время начала и конца рабочего дня
+  const workdayStart = new Date(bookingStart);
+  workdayStart.setHours(8, 0, 0, 0);
+  const workdayEnd = new Date(bookingStart);
+  workdayEnd.setHours(20, 0, 0, 0);
+  const workdayDuration = workdayEnd - workdayStart;
 
-  const startHour = bookingStart.getHours();
-  const startMinute = bookingStart.getMinutes();
-  const endHour = bookingEnd.getHours();
-  const endMinute = bookingEnd.getMinutes();
+  // Вычисляем позицию и высоту карточки
+  const topPosition = ((bookingStart - workdayStart) / workdayDuration) * 100;
+  const height = ((bookingEnd - bookingStart) / workdayDuration) * 100;
 
-  const startTimeMinutes = (startHour - dayStartHour) * 60 + startMinute;
-  const endTimeMinutes = (endHour - dayStartHour) * 60 + endMinute;
+  console.log('Позиционирование карточки:', {
+    topPosition,
+    height,
+    workdayStart: workdayStart.toISOString(),
+    workdayEnd: workdayEnd.toISOString()
+  });
 
-  const durationInMinutes = endTimeMinutes - startTimeMinutes;
-
-  const topPosition = (startTimeMinutes / dayLengthMinutes) * 100;
-  const height = (durationInMinutes / (60 * 2)) * 400;
-
-  const backgroundColor = getRandomColor(booking.device_name || 'default');
-
-  const deviceStatus = booking.device_available ? "Доступен" : "Не доступен";
-  const deviceStatusColor = booking.device_available ? "#4CAF50" : "#F44336";
+  const backgroundColor = getRandomColor(booking.deviceName || 'default');
 
   return (
     <div
       className="booking-card"
       style={{
         position: 'absolute',
-        top: `${topPosition}%`, 
-        height: `${height}%`,   
-        backgroundColor,        
-        borderRadius: '12px',   
-        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)', 
-        overflow: 'hidden',     
-        transition: 'all 0.3s ease',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      <div className="booking-card-content" style={{
-        padding: '15px',
-        color: '#333',   
+        top: `${topPosition}%`,
+        height: `${height}%`,
+        backgroundColor,
+        width: '90%',
+        left: '5%',
+        borderRadius: '4px',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        padding: '8px',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        height: '100%',
-      }}>
-        <div style={{
-          fontSize: '16px',
-          fontWeight: '600',  
-          marginBottom: '5px',
-        }}>
-          {booking.device_name || 'Неизвестный прибор'}
-        </div>
-
-        <div style={{
-          fontSize: '14px',
-          fontWeight: '500',
-          color: deviceStatusColor, 
-          marginBottom: '10px',
-        }}>
-          {deviceStatus}
-        </div>
-
-        <div style={{
-          fontSize: '14px',
-          color: '#777',   
-          marginBottom: '10px',
-        }}>
-          {formatTime(bookingStart)} - {formatTime(bookingEnd)}
-        </div>
-
-        <div className="booking-status" style={{
-          fontSize: '14px', 
-          fontWeight: '500', 
-          color: '#5e5e5e', 
-          padding: '5px 10px', 
-          backgroundColor: '#f4f4f4', 
-          borderRadius: '8px', 
-          textAlign: 'center', 
-          marginTop: 'auto',   
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-        }}>
-          {booking.status === 'pending' && 'Ожидание'}
-          {booking.status === 'confirmed' && 'Подтверждено'}
-          {booking.status === 'cancelled' && 'Отменено'}
-          {booking.status === 'completed' && 'Завершено'}
-        </div>
+        zIndex: 3
+      }}
+    >
+      <div style={{ fontWeight: 'bold', fontSize: '14px' }}>
+        {booking.deviceName || 'Неизвестный прибор'}
+      </div>
+      
+      <div style={{ fontSize: '12px', color: '#666' }}>
+        {formatTime(bookingStart)} - {formatTime(bookingEnd)}
       </div>
     </div>
   );

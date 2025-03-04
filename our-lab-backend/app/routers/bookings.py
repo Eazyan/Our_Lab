@@ -6,6 +6,7 @@ import pytz
 
 from ..database import get_db
 from .. import models, schemas
+from ..utils import get_current_user
 
 router = APIRouter(
     prefix="/bookings",
@@ -13,8 +14,11 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=List[dict])
-def get_bookings(db: Session = Depends(get_db)):
-    bookings = db.query(models.Booking).all()
+async def get_bookings(
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    bookings = db.query(models.Booking).filter(models.Booking.user_id == current_user.id).all()
     result = []
     for booking in bookings:
         device = db.query(models.Device).filter(models.Device.id == booking.device_id).first()
@@ -32,15 +36,17 @@ def get_bookings(db: Session = Depends(get_db)):
     return result
 
 @router.post("/", response_model=schemas.Booking, status_code=status.HTTP_201_CREATED)
-def create_booking(booking: schemas.BookingCreate, db: Session = Depends(get_db)):
+async def create_booking(
+    booking: schemas.BookingCreate,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     device = db.query(models.Device).filter(models.Device.id == booking.device_id).first()
     if not device:
         raise HTTPException(status_code=404, detail=f"Прибор с ID {booking.device_id} не найден")
     
     start_time = booking.start_time
     end_time = booking.end_time
-    
-    print(f"Полученное время от клиента: Начало={start_time}, Конец={end_time}")
     
     start_hour = start_time.hour
     start_minute = start_time.minute
@@ -52,9 +58,6 @@ def create_booking(booking: schemas.BookingCreate, db: Session = Depends(get_db)
     
     business_start_minutes = 8 * 60 + 30
     business_end_minutes = 17 * 60
-    
-    print(f"Время в минутах: Начало={start_time_minutes}, Конец={end_time_minutes}")
-    print(f"Рабочее время: {business_start_minutes}-{business_end_minutes}")
     
     if start_time_minutes < business_start_minutes or end_time_minutes > business_end_minutes:
         raise HTTPException(
@@ -71,7 +74,9 @@ def create_booking(booking: schemas.BookingCreate, db: Session = Depends(get_db)
     if overlapping_bookings:
         raise HTTPException(status_code=400, detail="Это время уже забронировано")
     
-    new_booking = models.Booking(**booking.model_dump())
+    booking_data = booking.model_dump()
+    booking_data["user_id"] = current_user.id
+    new_booking = models.Booking(**booking_data)
     db.add(new_booking)
     db.commit()
     db.refresh(new_booking)
@@ -82,7 +87,7 @@ def create_booking(booking: schemas.BookingCreate, db: Session = Depends(get_db)
     return response
 
 @router.get("/{booking_id}", response_model=schemas.Booking)
-def get_booking(booking_id: int, db: Session = Depends(get_db)):
+async def get_booking(booking_id: int, db: Session = Depends(get_db)):
     booking = db.query(models.Booking).filter(models.Booking.id == booking_id).first()
     if booking is None:
         raise HTTPException(status_code=404, detail="Бронирование не найдено")
@@ -93,7 +98,7 @@ def get_booking(booking_id: int, db: Session = Depends(get_db)):
     return response
 
 @router.patch("/{booking_id}", response_model=schemas.Booking)
-def update_booking(booking_id: int, booking_update: schemas.BookingUpdate, db: Session = Depends(get_db)):
+async def update_booking(booking_id: int, booking_update: schemas.BookingUpdate, db: Session = Depends(get_db)):
     db_booking = db.query(models.Booking).filter(models.Booking.id == booking_id).first()
     if db_booking is None:
         raise HTTPException(status_code=404, detail="Бронирование не найдено")
@@ -111,7 +116,7 @@ def update_booking(booking_id: int, booking_update: schemas.BookingUpdate, db: S
     return response
 
 @router.delete("/{booking_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_booking(booking_id: int, db: Session = Depends(get_db)):
+async def delete_booking(booking_id: int, db: Session = Depends(get_db)):
     booking = db.query(models.Booking).filter(models.Booking.id == booking_id).first()
     if booking is None:
         raise HTTPException(status_code=404, detail="Бронирование не найдено")

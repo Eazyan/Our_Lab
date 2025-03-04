@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import '../Timeline.css'; // Keep using the existing CSS
+import '../Timeline.css';
 import { getBookings } from '../../utils/api.js';
 import TimelineControls from './TimelineControls';
 import TimelineView from './TimelineView';
 import { isSameDay } from './utils';
+import DebugBookings from './DebugBookings';
 
 const Timeline = () => {
   const startTime = 8;  
@@ -45,11 +46,13 @@ const Timeline = () => {
       try {
         setLoading(true);
         const response = await getBookings();
+        console.log('Получены данные о бронированиях:', response);
+        
         if (isMounted) {
-          // Проверяем, что response.data существует и является массивом
-          const bookingsData = response?.data || [];
-          console.log('Полученные бронирования:', bookingsData);
-          setBookings(Array.isArray(bookingsData) ? bookingsData : []);
+          // Проверяем структуру ответа и извлекаем данные
+          const bookingsData = response?.data || response || [];
+          console.log('Обработанные данные о бронированиях:', bookingsData);
+          setBookings(bookingsData);
           setError(null);
         }
       } catch (err) {
@@ -72,9 +75,28 @@ const Timeline = () => {
     };
   }, []);
 
-  const filteredBookings = bookings.filter(booking => 
-    isSameDay(booking.start_time, selectedDate)
-  );
+  const filteredBookings = bookings.filter(booking => {
+    console.log('Проверка бронирования для фильтрации:', booking);
+    if (!booking || !booking.startTime) {
+      console.log('Бронирование пропущено - нет startTime');
+      return false;
+    }
+    
+    const bookingDate = new Date(booking.startTime);
+    const selected = new Date(selectedDate);
+    
+    console.log('Сравнение дат:', {
+      bookingDate: bookingDate.toISOString(),
+      selectedDate: selected.toISOString(),
+      sameDate: bookingDate.getDate() === selected.getDate(),
+      sameMonth: bookingDate.getMonth() === selected.getMonth(),
+      sameYear: bookingDate.getFullYear() === selected.getFullYear()
+    });
+    
+    return bookingDate.getDate() === selected.getDate() &&
+           bookingDate.getMonth() === selected.getMonth() &&
+           bookingDate.getFullYear() === selected.getFullYear();
+  });
 
   if (loading) {
     return <div className="loading">Загрузка данных...</div>;
@@ -106,6 +128,8 @@ const Timeline = () => {
           filteredBookings={filteredBookings}
         />
       )}
+      
+      <DebugBookings bookings={bookings} error={error} />
     </div>
   );
 };

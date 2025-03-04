@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { getDevices } from '../utils/api'; // Импортируем функцию для работы с API
-import DeviceCard from '../components/Device/DeviceCard'; // Компонент для отображения каждого прибора
+import { getDevices } from '../utils/api';
+import DeviceCard from '../components/Device/DeviceCard'; 
 
 const DeviceList = () => {
-  const [devices, setDevices] = useState([]); // Храним список приборов
-  const [loading, setLoading] = useState(true); // Состояние загрузки
+  const [devices, setDevices] = useState([]); 
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Загружаем список приборов при монтировании компонента
     const fetchDevices = async () => {
       try {
         const data = await getDevices();

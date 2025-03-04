@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getUserRole } from '../utils/auth';
+import { getCurrentUser } from '../utils/api';
+import { toast } from 'react-toastify';
 import '../styles/Dashboard.css';
 
 const Dashboard = () => {
@@ -9,20 +11,24 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Получаем информацию о пользователе из токена
-    const role = getUserRole();
-    setUserRole(role);
-    
-    // В реальном приложении здесь будет запрос к API для получения полной информации о пользователе
-    // Для демонстрации используем имитацию загрузки данных
-    setTimeout(() => {
-      // Имитация получения имени пользователя
-      setUserName(role === 'admin' ? 'Администратор' : role === 'teacher' ? 'Преподаватель' : 'Студент');
-      setIsLoading(false);
-    }, 1000);
+    const fetchUserData = async () => {
+      try {
+        const role = getUserRole();
+        setUserRole(role);
+        
+        const userData = await getCurrentUser();
+        setUserName(userData.username);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Ошибка при получении данных пользователя:', error);
+        toast.error('Не удалось загрузить данные пользователя');
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
   }, []);
 
-  // Определяем доступные карточки в зависимости от роли пользователя
   const getAvailableCards = () => {
     const cards = [
       {

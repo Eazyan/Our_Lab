@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { getDevices } from '../utils/api';
+import { getDevices, apiUrl } from '../utils/api';
+import axios from 'axios';
 import { toast } from 'react-toastify';
+import { getToken } from '../utils/auth';
+import '../styles/Devices.css';
 
 const Devices = () => {
   const [devices, setDevices] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    status: 'available'
+  });
 
   useEffect(() => {
     fetchDevices();
@@ -13,52 +21,157 @@ const Devices = () => {
 
   const fetchDevices = async () => {
     try {
-      setIsLoading(true);
-      const response = await getDevices();
-      console.log('Ответ сервера:', response);
-      
-      // Проверяем, что response.data существует и является массивом
-      if (response && response.data && Array.isArray(response.data)) {
-        setDevices(response.data);
-      } else {
-        console.error('Неверный формат данных:', response);
-        setError('Неверный формат данных от сервера');
-        toast.error('Ошибка формата данных');
-      }
+      const data = await getDevices();
+      setDevices(data);
     } catch (error) {
-      console.error('Ошибка при получении списка приборов:', error);
-      setError('Не удалось загрузить список приборов');
-      toast.error('Ошибка при загрузке приборов');
+      console.error('Ошибка при загрузке устройств:', error);
+      toast.error('Не удалось загрузить список устройств');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = getToken();
+      const response = await axios.post(`${apiUrl}/devices`, formData, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      setDevices(prev => [...prev, response.data]);
+      setShowForm(false);
+      setFormData({ name: '', description: '', status: 'available' });
+      toast.success('Устройство успешно добавлено');
+    } catch (error) {
+      console.error('Ошибка при добавлении устройства:', error);
+      toast.error('Не удалось добавить устройство');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      const token = getToken();
+      await axios.delete(`${apiUrl}/devices/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      setDevices(prev => prev.filter(device => device.id !== id));
+      toast.success('Устройство успешно удалено');
+    } catch (error) {
+      console.error('Ошибка при удалении устройства:', error);
+      toast.error('Не удалось удалить устройство');
+    }
+  };
+
   if (isLoading) {
-    return <div className="loading">Загрузка...</div>;
-  }
-
-  if (error) {
-    return <div className="error">{error}</div>;
-  }
-
-  if (!devices || devices.length === 0) {
-    return <div className="no-devices">Нет доступных приборов</div>;
+    return (
+      <div className="devices-container loading">
+        <p>Загрузка устройств...</p>
+      </div>
+    );
   }
 
   return (
     <div className="devices-container">
-      <h2>Управление приборами</h2>
-      <div className="devices-grid">
-        {devices.map(device => (
-          <div key={device.id} className="device-card">
-            <h3>{device.name}</h3>
-            <p className={`status ${device.available ? 'available' : 'unavailable'}`}>
-              {device.available ? 'Доступен' : 'Недоступен'}
-            </p>
-            <p className="description">{device.description}</p>
+      <h2>Управление оборудованием</h2>
+      
+      <div className="devices-actions">
+        <button 
+          className="add-device-btn"
+          onClick={() => setShowForm(!showForm)}
+        >
+          {showForm ? 'Отменить' : 'Добавить устройство'}
+        </button>
+      </div>
+
+      {showForm && (
+        <div className="device-form">
+          <h3>Новое устройство</h3>
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label htmlFor="name">Название:</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="description">Описание:</label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="status">Статус:</label>
+              <select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleInputChange}
+                required
+              >
+                <option value="available">Доступно</option>
+                <option value="in_use">В использовании</option>
+                <option value="maintenance">На обслуживании</option>
+              </select>
+            </div>
+
+            <button type="submit">Добавить</button>
+          </form>
+        </div>
+      )}
+
+      <div className="devices-list">
+        {devices && devices.length > 0 ? (
+          devices.map(device => (
+            <div key={device.id} className="device-card">
+              <div className="device-info">
+                <h3>{device.name}</h3>
+                <p>{device.description}</p>
+                <span className={`status-badge status-${device.status}`}>
+                  {device.status === 'available' && 'Доступно'}
+                  {device.status === 'in_use' && 'В использовании'}
+                  {device.status === 'maintenance' && 'На обслуживании'}
+                </span>
+              </div>
+              <div className="device-actions">
+                <button 
+                  className="delete-btn"
+                  onClick={() => handleDelete(device.id)}
+                >
+                  Удалить
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="no-devices">
+            <p>Нет доступных устройств</p>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify'; // Для уведомлений
-import 'react-toastify/dist/ReactToastify.css'; // Стили для уведомлений
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import api from '../utils/api';
 
 const UserSelection = () => {
@@ -16,17 +16,16 @@ const UserSelection = () => {
       
       await api.post('/auth/login', { role });
       
-      toast.success(`Вы теперь ${role === 'student' ? 'Студент' : role === 'teacher' ? 'Преподаватель' : 'Администратор'}`); // Уведомление
+      toast.success(`Вы теперь ${role === 'student' ? 'Студент' : role === 'teacher' ? 'Преподаватель' : 'Администратор'}`);
 
       if (role === 'student') {
-        navigate('/timeline'); // Студент — только таймлайн
+        navigate('/timeline');
       } else if (role === 'teacher') {
-        navigate('/bookings'); // Преподаватель — таймлайн и бронирования
+        navigate('/bookings');
       } else {
-        navigate('/devices'); // Администратор — все страницы
+        navigate('/devices');
       }
     } catch (error) {
-      console.error('Ошибка при авторизации:', error);
       toast.error('Ошибка при выборе роли. Попробуйте еще раз.');
     } finally {
       setIsLoading(false);

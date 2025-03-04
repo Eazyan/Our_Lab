@@ -25,14 +25,10 @@ def wait_for_db():
         try:
             conn = psycopg2.connect(**db_params)
             conn.close()
-            print("База данных доступна!")
             return
         except psycopg2.OperationalError:
             retries += 1
-            print(f"База данных недоступна, ожидание... ({retries}/{max_retries})")
             time.sleep(2)
-    
-    print("Не удалось подключиться к базе данных после нескольких попыток.")
 
 wait_for_db()
 
@@ -106,19 +102,14 @@ def clear_database(db: Session = Depends(get_db)):
 @app.get("/debug/reset-db")
 def reset_database():
     try:
-        # Удаляем все таблицы
         models.Base.metadata.drop_all(bind=engine)
-        print("Все таблицы удалены")
         
-        # Удаляем все последовательности
         with engine.connect() as conn:
             conn.execute(text("DROP SEQUENCE IF EXISTS users_id_seq CASCADE"))
             conn.execute(text("DROP SEQUENCE IF EXISTS devices_id_seq CASCADE"))
             conn.execute(text("DROP SEQUENCE IF EXISTS bookings_id_seq CASCADE"))
             conn.commit()
-            print("Все последовательности удалены")
         
-        # Удаляем и пересоздаем базу данных
         db_params = {
             "dbname": "ourlab",
             "user": "postgres",
@@ -127,12 +118,10 @@ def reset_database():
             "port": "5432"
         }
         
-        # Подключаемся к postgres для удаления базы данных
         conn = psycopg2.connect(**db_params)
         conn.autocommit = True
         cur = conn.cursor()
         
-        # Закрываем все соединения с базой данных
         cur.execute("""
             SELECT pg_terminate_backend(pg_stat_activity.pid)
             FROM pg_stat_activity
@@ -140,28 +129,19 @@ def reset_database():
             AND pid <> pg_backend_pid();
         """)
         
-        # Удаляем базу данных
         cur.execute("DROP DATABASE IF EXISTS ourlab")
-        print("База данных удалена")
-        
-        # Создаем базу данных заново
         cur.execute("CREATE DATABASE ourlab")
-        print("База данных создана")
         
         cur.close()
         conn.close()
         
-        # Создаем таблицы заново
         models.Base.metadata.create_all(bind=engine)
-        print("Все таблицы пересозданы")
         
-        # Создаем последовательности заново
         with engine.connect() as conn:
             conn.execute(text("CREATE SEQUENCE users_id_seq"))
             conn.execute(text("CREATE SEQUENCE devices_id_seq"))
             conn.execute(text("CREATE SEQUENCE bookings_id_seq"))
             conn.commit()
-            print("Все последовательности пересозданы")
         
         return {
             "status": "success", 

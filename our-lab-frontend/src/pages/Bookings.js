@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getDevices, getBookings, apiUrl } from '../utils/api.js'; 
-import axios from 'axios';
+import { getDevices, getBookings, createBooking, deleteBooking, apiUrl } from '../utils/api.js'; 
 import { toast } from 'react-toastify';
 import { getToken } from '../utils/auth';
+import '../styles/Bookings.css';
 
 const Bookings = () => {
     const [devices, setDevices] = useState([]);
@@ -11,17 +11,29 @@ const Bookings = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
   
+    const fetchBookings = async () => {
+      try {
+        const bookingsData = await getBookings();
+        console.log('Полученные бронирования:', bookingsData);
+        setBookings(Array.isArray(bookingsData) ? bookingsData : []);
+      } catch (error) {
+        console.error('Ошибка при загрузке бронирований:', error);
+        toast.error('Не удалось загрузить бронирования');
+        setBookings([]);
+      }
+    };
+
     useEffect(() => {
       const fetchData = async () => {
         try {
-          const devicesResponse = await getDevices();
-          setDevices(devicesResponse.data);
-          
-          const bookingsResponse = await getBookings(); 
-          setBookings(bookingsResponse.data);
+          const devicesData = await getDevices();
+          setDevices(Array.isArray(devicesData) ? devicesData : []);
+          await fetchBookings();
         } catch (error) {
           console.error('Ошибка при загрузке данных:', error);
           toast.error('Не удалось загрузить данные');
+          setDevices([]);
+          setBookings([]);
         } finally {
           setIsLoading(false);
         }
@@ -55,29 +67,13 @@ const Bookings = () => {
         }
         
         const newBooking = {
-          device_id: deviceIdNumber,
+          deviceId: deviceIdNumber,
           start_time: startTime,
           end_time: endTime
         };
         
-        const token = getToken();
-        const response = await axios.post(`${apiUrl}/bookings`, newBooking, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          withCredentials: true
-        });
-        
-        const bookingForFrontend = {
-          id: response.data.id,
-          device_id: response.data.device_id,
-          device_name: selectedDeviceObj.name,
-          start_time: response.data.start_time,
-          end_time: response.data.end_time,
-          status: response.data.status || 'pending'
-        };
-        
-        setBookings((prevBookings) => [...prevBookings, bookingForFrontend]);
+        await createBooking(newBooking);
+        await fetchBookings();
         setShowForm(false);
         toast.success('Бронирование успешно создано!');
       } catch (error) {
@@ -93,19 +89,23 @@ const Bookings = () => {
       
     const handleCancelBooking = async (id) => {
       try {
-        const token = getToken();
-        await axios.delete(`${apiUrl}/bookings/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          },
-          withCredentials: true
-        });
-        
-        setBookings(bookings.filter(booking => booking.id !== id));
+        await deleteBooking(id);
+        await fetchBookings();
         toast.success('Бронирование отменено');
       } catch (error) {
         console.error('Ошибка при отмене бронирования:', error);
         toast.error('Не удалось отменить бронирование');
+      }
+    };
+
+    const handleDeleteBooking = async (id) => {
+      try {
+        await deleteBooking(id);
+        await fetchBookings();
+        toast.success('Бронирование удалено');
+      } catch (error) {
+        console.error('Ошибка при удалении бронирования:', error);
+        toast.error('Не удалось удалить бронирование');
       }
     };
   
@@ -119,7 +119,7 @@ const Bookings = () => {
   
     return (
       <div className="bookings-container">
-        <h2>Мои бронирования</h2>
+        <h2>Все бронирования</h2>
         
         <div className="bookings-actions">
           <button 
@@ -164,7 +164,7 @@ const Bookings = () => {
               />
             </div>
             
-            <button 
+            <button
               onClick={() => {
                 const startTime = document.getElementById('start-time').value;
                 const endTime = document.getElementById('end-time').value;
@@ -192,31 +192,44 @@ const Bookings = () => {
             <div className="booking-cell">Действия</div>
           </div>
           
-          {bookings.length > 0 ? (
-            bookings.map(booking => (
-              <div key={booking.id} className={`booking-row status-${booking.status}`}>
-                <div className="booking-cell">{booking.device_name}</div>
-                <div className="booking-cell">{booking.start_time.split('T')[0]}</div>
-                <div className="booking-cell">{booking.start_time.split('T')[1].substring(0, 5)}</div>
-                <div className="booking-cell">{booking.end_time.split('T')[1].substring(0, 5)}</div>
-                <div className="booking-cell status">
-                  {booking.status === 'pending' && 'Ожидание'}
-                  {booking.status === 'confirmed' && 'Подтверждено'}
-                  {booking.status === 'cancelled' && 'Отменено'}
-                  {booking.status === 'completed' && 'Завершено'}
-                </div>
-                <div className="booking-cell actions">
-                  {(booking.status === 'pending' || booking.status === 'confirmed') && (
-                    <button onClick={() => handleCancelBooking(booking.id)}>
-                      Отменить
+          {bookings && bookings.length > 0 ? (
+            bookings.map(booking => {
+              if (!booking || !booking.start_time || !booking.end_time) {
+                return null;
+              }
+              
+              const startTime = new Date(booking.start_time);
+              const endTime = new Date(booking.end_time);
+              
+              return (
+                <div key={booking.id} className={`booking-row status-${booking.status || 'pending'}`}>
+                  <div className="booking-cell">{booking.deviceName || 'Неизвестное устройство'}</div>
+                  <div className="booking-cell">{startTime.toLocaleDateString()}</div>
+                  <div className="booking-cell">{startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                  <div className="booking-cell">{endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                  <div className="booking-cell status">
+                    {booking.status === 'pending' && 'Ожидание'}
+                    {booking.status === 'confirmed' && 'Подтверждено'}
+                    {booking.status === 'cancelled' && 'Отменено'}
+                    {booking.status === 'completed' && 'Завершено'}
+                    {!booking.status && 'Ожидание'}
+                  </div>
+                  <div className="booking-cell actions">
+                    {(booking.status === 'pending' || booking.status === 'confirmed' || !booking.status) && (
+                      <button onClick={() => handleCancelBooking(booking.id)}>
+                        Отменить
+                      </button>
+                    )}
+                    <button onClick={() => handleDeleteBooking(booking.id)}>
+                      Удалить
                     </button>
-                  )}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="bookings-empty">
-              <p>У вас нет активных бронирований</p>
+              <p>Нет бронирований</p>
             </div>
           )}
         </div>

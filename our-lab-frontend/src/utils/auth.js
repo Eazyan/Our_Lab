@@ -11,74 +11,98 @@ const setCookie = (name, value, days) => {
 };
 
 const getCookie = (name) => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(';').shift();
+  try {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+  } catch (error) {
+    console.error('Ошибка при получении cookie:', error);
+    return null;
+  }
 };
 
 const removeCookie = (name) => {
-  document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+  try {
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+  } catch (error) {
+    console.error('Ошибка при удалении cookie:', error);
+  }
 };
 
 export const getToken = () => {
-  const token = getCookie(TOKEN_KEY);
-  console.log('Получение токена:', token ? 'Токен найден' : 'Токен не найден');
-  return token;
+  try {
+    const token = getCookie(TOKEN_KEY);
+    if (!token) return null;
+    
+    const decoded = jwtDecode(token);
+    const isExpired = decoded.exp * 1000 <= Date.now();
+    
+    if (isExpired) {
+      removeToken();
+      return null;
+    }
+    
+    return token;
+  } catch (error) {
+    console.error('Ошибка при получении токена:', error);
+    removeToken();
+    return null;
+  }
 };
 
 export const setToken = (token) => {
-  console.log('Сохранение токена...');
-  setCookie(TOKEN_KEY, token, TOKEN_EXPIRY);
-  console.log('Токен сохранен в куки');
-  
+  try {
+    if (!token) {
+      removeToken();
+      return;
+    }
+    
+    setCookie(TOKEN_KEY, token, TOKEN_EXPIRY);
+    const event = new Event('authStateChanged');
+    window.dispatchEvent(event);
+  } catch (error) {
+    console.error('Ошибка при установке токена:', error);
+    removeToken();
+  }
+};
+
+export const removeToken = () => {
+  removeCookie(TOKEN_KEY);
   const event = new Event('authStateChanged');
   window.dispatchEvent(event);
 };
 
-export const removeToken = () => {
-  console.log('Удаление токена...');
-  removeCookie(TOKEN_KEY);
-  console.log('Токен удален из куки');
-};
-
 export const getUserRole = () => {
-  const token = getToken();
-  if (!token) {
-    console.log('Токен отсутствует, роль не определена');
-    return null;
-  }
-  
   try {
+    const token = getToken();
+    if (!token) return null;
+    
     const decoded = jwtDecode(token);
-    console.log('Роль пользователя:', decoded.role);
     return decoded.role;
   } catch (error) {
-    console.error('Ошибка при декодировании токена:', error);
+    console.error('Ошибка при получении роли пользователя:', error);
     removeToken();
     return null;
   }
 };
 
 export const isAuthenticated = () => {
-  const token = getToken();
-  if (!token) {
-    console.log('Токен отсутствует, пользователь не аутентифицирован');
-    return false;
-  }
-  
   try {
+    const token = getToken();
+    if (!token) return false;
+    
     const decoded = jwtDecode(token);
     const isExpired = decoded.exp * 1000 <= Date.now();
-    console.log('Проверка аутентификации:', isExpired ? 'Токен истек' : 'Токен действителен');
     return !isExpired;
   } catch (error) {
     console.error('Ошибка при проверке аутентификации:', error);
+    removeToken();
     return false;
   }
 };
 
 export const logout = () => {
-  console.log('Выход из системы...');
   removeToken();
   window.location.href = '/';
 };

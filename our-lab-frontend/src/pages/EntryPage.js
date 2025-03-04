@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../utils/api';
+import { login, register } from '../utils/api';
 import { toast } from 'react-toastify';
 import { setToken } from '../utils/auth';
 
@@ -36,40 +36,20 @@ const EntryPage = () => {
       setIsLoading(true);
       setError('');
       
-      console.log('Попытка входа с данными:', {
-        username: formData.username,
-        password: '***'
-      });
-      
-      const response = await api.post('/auth/login', { 
+      const data = await login({ 
         username: formData.username, 
         password: formData.password 
       });
       
-      console.log('Ответ сервера при входе:', response.data);
-      
-      if (response.data && response.data.access_token) {
-        setToken(response.data.access_token);
-        console.log('Токен успешно сохранен');
+      if (data && data.access_token) {
+        setToken(data.access_token);
         toast.success('Вход выполнен успешно!');
-        
-        setTimeout(() => {
-          console.log('Выполняем навигацию на /dashboard');
-          window.location.href = '/dashboard';
-        }, 100);
+        navigate('/dashboard');
       } else {
-        console.error('Токен не получен от сервера');
         setError('Не удалось получить токен доступа от сервера');
       }
     } catch (error) {
-      console.error('Ошибка при авторизации:', error);
-      if (error.response) {
-        setError(error.response.data?.detail || 'Неверное имя пользователя или пароль');
-      } else if (error.code === 'ERR_NETWORK') {
-        setError('Не удалось соединиться с сервером. Проверьте, запущен ли бэкенд.');
-      } else {
-        setError('Ошибка соединения с сервером');
-      }
+      setError(error.message || 'Ошибка при входе в систему');
     } finally {
       setIsLoading(false);
     }
@@ -86,46 +66,29 @@ const EntryPage = () => {
       setIsLoading(true);
       setError('');
       
-      console.log('Отправка данных регистрации:', formData);
-      
-      const response = await api.post('/auth/register', { 
+      await register({ 
         username: formData.username, 
         password: formData.password,
         email: formData.email,
         role: formData.role 
       });
       
-      console.log('Ответ сервера при регистрации:', response.data);
       toast.success('Регистрация успешна!');
       
-      console.log('Попытка автоматического входа...');
-      const loginResponse = await api.post('/auth/login', {
+      const loginData = await login({
         username: formData.username,
         password: formData.password
       });
       
-      console.log('Ответ сервера при автоматическом входе:', loginResponse.data);
-      
-      if (loginResponse.data && loginResponse.data.access_token) {
-        setToken(loginResponse.data.access_token);
+      if (loginData && loginData.access_token) {
+        setToken(loginData.access_token);
         toast.success('Вход выполнен автоматически!');
-        
-        setTimeout(() => {
-          console.log('Выполняем навигацию на /dashboard');
-          window.location.href = '/dashboard';
-        }, 100);
+        navigate('/dashboard');
       } else {
         setIsLogin(true);
       }
     } catch (error) {
-      console.error('Ошибка при регистрации:', error);
-      if (error.response) {
-        setError(error.response.data?.detail || 'Ошибка при регистрации. Возможно, пользователь уже существует.');
-      } else if (error.code === 'ERR_NETWORK') {
-        setError('Не удалось соединиться с сервером. Проверьте, запущен ли бэкенд.');
-      } else {
-        setError('Ошибка соединения с сервером');
-      }
+      setError(error.message || 'Ошибка при регистрации');
     } finally {
       setIsLoading(false);
     }
@@ -180,7 +143,7 @@ const EntryPage = () => {
                 />
               </div>
               <div className="form-group">
-                <label htmlFor="role">Выберите роль (только для разработки)</label>
+                <label htmlFor="role">Выберите роль</label>
                 <select
                   id="role"
                   name="role"
