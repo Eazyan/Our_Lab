@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -9,9 +9,16 @@ import DeviceList from './pages/DeviceList';
 import Bookings from './pages/Bookings';
 import Timeline from './pages/Timeline';
 import AddDevice from './pages/AddDevice';
+import { getUserRole, isTokenExpired, removeToken } from './utils/auth';
 
 function App() {
-  const userRole = localStorage.getItem('userRole');
+  useEffect(() => {
+    if (isTokenExpired()) {
+      removeToken();
+    }
+  }, []);
+
+  const userRole = getUserRole();
 
   return (
     <Router>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import { toast } from 'react-toastify'; // Для уведомлений
-import 'react-toastify/dist/ReactToastify.css'; // Стили для уведомлений
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import api from '../utils/api';
 
 const AddDevice = () => {
   const [device, setDevice] = useState({
@@ -23,9 +23,14 @@ const AddDevice = () => {
     e.preventDefault();
 
     try {
-      // Замените порт на 5001, если сервер работает на этом порту
-      const response = await axios.post('http://127.0.0.1:5001/devices', device); // Путь к API
+      await api.post('/devices', device);
       toast.success('Устройство успешно добавлено!');
+      setDevice({
+        name: '',
+        description: '',
+        characteristics: '',
+        available: true
+      });
     } catch (error) {
       toast.error('Ошибка при добавлении устройства');
     }

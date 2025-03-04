@@ -6,11 +6,10 @@ import TimelineView from './TimelineView';
 import { isSameDay } from './utils';
 
 const Timeline = () => {
-  const startTime = 8;  // Начало времени (8:00)
-  const endTime = 17;   // Конец времени (17:00)
+  const startTime = 8;  
+  const endTime = 17;   
   const timeSlots = [];
 
-  // Генерация временных слотов с шагом 30 минут
   for (let i = startTime; i <= endTime; i++) {
     timeSlots.push(`${i}:00`, `${i}:30`);
   }
@@ -20,27 +19,23 @@ const Timeline = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [error, setError] = useState(null);
 
-  // Navigate to the next day
   const goToNextDay = () => {
     const nextDay = new Date(selectedDate);
     nextDay.setDate(nextDay.getDate() + 1);
     setSelectedDate(nextDay);
   };
 
-  // Navigate to the previous day
   const goToPreviousDay = () => {
     const prevDay = new Date(selectedDate);
     prevDay.setDate(prevDay.getDate() - 1);
     setSelectedDate(prevDay);
   };
 
-  // Handle date input change
   const handleDateChange = (event) => {
     const newDate = new Date(event.target.value);
     setSelectedDate(newDate);
   };
 
-  // Fetch bookings data from API - with debounce
   useEffect(() => {
     let isMounted = true;
     
@@ -49,7 +44,6 @@ const Timeline = () => {
       
       try {
         setLoading(true);
-        // Add a small timeout to prevent too frequent API calls
         const data = await getBookings();
         if (isMounted) {
           setBookings(data || []);
@@ -74,7 +68,6 @@ const Timeline = () => {
     };
   }, []);
 
-  // Filter bookings for the selected date
   const filteredBookings = bookings.filter(booking => 
     isSameDay(booking.startTime, selectedDate)
   );

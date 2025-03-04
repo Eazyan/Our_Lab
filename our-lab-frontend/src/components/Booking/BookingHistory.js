@@ -2,7 +2,6 @@ import React from 'react';
 import './BookingHistory.css';
 
 const BookingHistory = ({ bookings, devices }) => {
-  // Функция для форматирования даты
   const formatDate = (dateString) => {
     if (!dateString) return 'Дата не указана';
     
@@ -10,21 +9,17 @@ const BookingHistory = ({ bookings, devices }) => {
       console.log('Форматирую дату:', dateString);
       const date = new Date(dateString);
       
-      // Проверяем, что дата валидна
       if (isNaN(date.getTime())) {
         console.error('Невалидная дата:', dateString);
         return 'Некорректная дата';
       }
       
-      // Получаем реальную дату и время (с учетом часового пояса)
       const utcDate = date.toUTCString();
       const localDate = date.toString();
       
       console.log('Исходная дата (UTC):', utcDate);
       console.log('Локальная дата:', localDate);
       
-      // Форматируем дату в локальном формате
-      // Используем Intl.DateTimeFormat для более надежного форматирования
       const formatter = new Intl.DateTimeFormat('ru-RU', {
         year: 'numeric',
         month: 'long',
@@ -49,7 +44,7 @@ const BookingHistory = ({ bookings, devices }) => {
       ) : (
         <div className="booking-list">
           {bookings.map((booking) => {
-            console.log('Данные бронирования:', booking); // Отладочная информация
+            console.log('Данные бронирования:', booking);
             const device = devices.find((device) => 
               device.id === booking.deviceId || 
               device.id === booking.device_id

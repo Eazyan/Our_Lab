@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import devices, bookings
+from .routers import devices, bookings, auth
 from . import models
 from .database import engine, get_db, SessionLocal
 from sqlalchemy.orm import Session
@@ -11,7 +11,6 @@ from sqlalchemy import text
 
 def wait_for_db():
     db_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@postgres/ourlab")
-    # Получаем параметры соединения из URL
     db_params = {
         "dbname": "ourlab",
         "user": "postgres",
@@ -35,26 +34,24 @@ def wait_for_db():
     
     print("Не удалось подключиться к базе данных после нескольких попыток.")
 
-# Ждем, пока база данных станет доступной
 wait_for_db()
 
-# Создаем таблицы в базе данных
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Our Lab API")
 
-# Make sure CORS is properly configured
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://frontend:3000"],  # Add all possible frontend URLs
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://frontend:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
-# Подключаем роутеры
 app.include_router(devices.router)
 app.include_router(bookings.router)
+app.include_router(auth.router)
 
 @app.get("/")
 def read_root():
@@ -78,17 +75,12 @@ def debug_devices(db: Session = Depends(get_db)):
 def clear_database(db: Session = Depends(get_db)):
     """Эндпоинт для очистки базы данных (только для отладки)"""
     try:
-        # Удаляем все бронирования сначала (из-за внешних ключей)
         db.query(models.Booking).delete()
-        
-        # Затем удаляем все устройства
         db.query(models.Device).delete()
         
-        # Сбрасываем последовательности ID - используем text() для явного определения SQL
         db.execute(text("ALTER SEQUENCE bookings_id_seq RESTART WITH 1"))
         db.execute(text("ALTER SEQUENCE devices_id_seq RESTART WITH 1"))
         
-        # Коммитим изменения
         db.commit()
         
         return {

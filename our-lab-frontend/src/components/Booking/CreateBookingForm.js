@@ -10,29 +10,24 @@ const CreateBookingForm = ({ devices, setBookings }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Проверка на пустые поля
     if (!selectedDevice || !startTime || !endTime) {
       alert('Пожалуйста, заполните все поля');
       return;
     }
 
-    // Создаем новое бронирование
     const newBooking = {
       deviceName: devices.find((device) => device.id === selectedDevice)?.name,
       deviceId: selectedDevice,
       startTime,
       endTime,
-      status: 'Ожидает подтверждения', // Начальный статус
+      status: 'Ожидает подтверждения', 
     };
 
     try {
-      // Отправляем запрос на сервер
       const response = await axios.post(`${apiUrl}/bookings`, newBooking);
 
-      // Обновляем список бронирований на фронте
       setBookings((prevBookings) => [...prevBookings, response.data]);
 
-      // Сбросим форму
       setSelectedDevice('');
       setStartTime('');
       setEndTime('');

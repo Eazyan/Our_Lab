@@ -9,9 +9,12 @@ services:
       - postgres
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres/ourlab
+      - PYTHONUNBUFFERED=1
     volumes:
       - ./our-lab-backend:/app
+      - ./our-lab-backend/app:/app/app
     restart: always
+    command: uvicorn app.main:app --host 0.0.0.0 --port 5001 --reload --reload-dir /app
 
   postgres:
     image: postgres:latest
@@ -25,13 +28,18 @@ services:
       - "5432:5432"
 
   frontend:
-    build: ./our-lab-frontend
+    build: 
+      context: ./our-lab-frontend
+      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     volumes:
       - ./our-lab-frontend:/app
       - /app/node_modules
     environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - FAST_REFRESH=true
       - HTTPS=false
       - REACT_APP_API_URL=http://localhost:5001
     restart: always

@@ -1,10 +1,7 @@
-// apiService.js - Direct API access bypassing environment variables
-import { apiUrl } from '../utils/api'; // Импортируем apiUrl
+import { apiUrl } from '../utils/api';
 
-// Используем apiUrl из api.js
 const API_BASE_URL = apiUrl;
 
-// Fetch devices
 export const fetchDevices = async () => {
   try {
     console.log('Directly fetching devices from:', `${API_BASE_URL}/devices/`);
@@ -30,7 +27,6 @@ export const fetchDevices = async () => {
   }
 };
 
-// Fetch bookings
 export const fetchBookings = async () => {
   try {
     console.log('Directly fetching bookings from:', `${API_BASE_URL}/bookings/`);
@@ -56,7 +52,6 @@ export const fetchBookings = async () => {
   }
 };
 
-// Create a new booking
 export const createBooking = async (bookingData) => {
   try {
     console.log('Creating booking with data:', bookingData);

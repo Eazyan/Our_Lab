@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import BookingCard from './BookingCard';
 
 const TimelineView = ({ timeSlots, selectedDate, filteredBookings }) => {
-  // Pre-process bookings to map them to time slots
   const bookingsBySlot = useMemo(() => {
     const slotMap = {};
     
