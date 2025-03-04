@@ -20,10 +20,10 @@ const BookingCard = ({ booking, bookingStart, bookingEnd }) => {
   const topPosition = (startTimeMinutes / dayLengthMinutes) * 100;
   const height = (durationInMinutes / (60 * 2)) * 400;
 
-  const backgroundColor = getRandomColor(booking.deviceName);
+  const backgroundColor = getRandomColor(booking.device_name || 'default');
 
-  const deviceStatus = booking.deviceAvailable ? "Доступен" : "Не доступен";
-  const deviceStatusColor = booking.deviceAvailable ? "#4CAF50" : "#F44336"; 
+  const deviceStatus = booking.device_available ? "Доступен" : "Не доступен";
+  const deviceStatusColor = booking.device_available ? "#4CAF50" : "#F44336";
 
   return (
     <div
@@ -49,16 +49,14 @@ const BookingCard = ({ booking, bookingStart, bookingEnd }) => {
         justifyContent: 'space-between',
         height: '100%',
       }}>
-        {}
         <div style={{
           fontSize: '16px',
           fontWeight: '600',  
           marginBottom: '5px',
         }}>
-          {booking.deviceName}
+          {booking.device_name || 'Неизвестный прибор'}
         </div>
 
-        {}
         <div style={{
           fontSize: '14px',
           fontWeight: '500',
@@ -68,16 +66,14 @@ const BookingCard = ({ booking, bookingStart, bookingEnd }) => {
           {deviceStatus}
         </div>
 
-        {}
         <div style={{
           fontSize: '14px',
           color: '#777',   
           marginBottom: '10px',
         }}>
-          {formatTime(booking.startTime)} - {formatTime(booking.endTime)}
+          {formatTime(bookingStart)} - {formatTime(bookingEnd)}
         </div>
 
-        {}
         <div className="booking-status" style={{
           fontSize: '14px', 
           fontWeight: '500', 
@@ -89,7 +85,10 @@ const BookingCard = ({ booking, bookingStart, bookingEnd }) => {
           marginTop: 'auto',   
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
         }}>
-          {booking.status}
+          {booking.status === 'pending' && 'Ожидание'}
+          {booking.status === 'confirmed' && 'Подтверждено'}
+          {booking.status === 'cancelled' && 'Отменено'}
+          {booking.status === 'completed' && 'Завершено'}
         </div>
       </div>
     </div>

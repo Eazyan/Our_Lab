@@ -1,0 +1,45 @@
+.profile-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.profile-container h2 {
+  margin-bottom: 2rem;
+  color: #333;
+  text-align: center;
+}
+
+.profile-info {
+  margin-bottom: 2rem;
+}
+
+.profile-info p {
+  margin: 1rem 0;
+  font-size: 1.1rem;
+}
+
+.profile-info strong {
+  color: #666;
+  margin-right: 0.5rem;
+}
+
+.logout-button {
+  display: block;
+  width: 100%;
+  padding: 0.8rem;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
+} 

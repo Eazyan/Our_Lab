@@ -10,7 +10,7 @@ const TimelineView = ({ timeSlots, selectedDate, filteredBookings }) => {
     });
     
     filteredBookings.forEach(booking => {
-      const bookingStart = new Date(booking.startTime);
+      const bookingStart = new Date(booking.start_time);
       const bookingStartHour = bookingStart.getHours();
       const bookingStartMinute = bookingStart.getMinutes();
       
@@ -44,8 +44,8 @@ const TimelineView = ({ timeSlots, selectedDate, filteredBookings }) => {
             <div className="timeline-time">{slot}</div>
             <div className="timeline-cell">
               {bookingsBySlot[slot].map((booking) => {
-                const bookingStart = new Date(booking.startTime);
-                const bookingEnd = new Date(booking.endTime);
+                const bookingStart = new Date(booking.start_time);
+                const bookingEnd = new Date(booking.end_time);
                 
                 return (
                   <BookingCard 

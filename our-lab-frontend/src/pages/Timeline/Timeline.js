@@ -44,15 +44,19 @@ const Timeline = () => {
       
       try {
         setLoading(true);
-        const data = await getBookings();
+        const response = await getBookings();
         if (isMounted) {
-          setBookings(data || []);
+          // Проверяем, что response.data существует и является массивом
+          const bookingsData = response?.data || [];
+          console.log('Полученные бронирования:', bookingsData);
+          setBookings(Array.isArray(bookingsData) ? bookingsData : []);
           setError(null);
         }
       } catch (err) {
         console.error('Ошибка при загрузке бронирований:', err);
         if (isMounted) {
           setError('Не удалось загрузить данные о бронированиях');
+          setBookings([]);
         }
       } finally {
         if (isMounted) {
@@ -69,7 +73,7 @@ const Timeline = () => {
   }, []);
 
   const filteredBookings = bookings.filter(booking => 
-    isSameDay(booking.startTime, selectedDate)
+    isSameDay(booking.start_time, selectedDate)
   );
 
   if (loading) {

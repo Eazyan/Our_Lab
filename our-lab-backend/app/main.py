@@ -40,13 +40,24 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Our Lab API")
 
+# Настройки CORS
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://frontend:3000",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "http://backend:8000"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://frontend:3000"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"]
+    expose_headers=["*"],
+    max_age=3600
 )
 
 app.include_router(devices.router)
@@ -55,11 +66,10 @@ app.include_router(auth.router)
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to Our Lab API"}
+    return {"message": "Welcome to Our Lab API!"}
 
 @app.get("/debug/devices")
 def debug_devices(db: Session = Depends(get_db)):
-    """Эндпоинт для отладки - показывает все устройства в базе данных"""
     devices = db.query(models.Device).all()
     result = []
     for device in devices:
@@ -73,7 +83,6 @@ def debug_devices(db: Session = Depends(get_db)):
 
 @app.get("/debug/clear-db")
 def clear_database(db: Session = Depends(get_db)):
-    """Эндпоинт для очистки базы данных (только для отладки)"""
     try:
         db.query(models.Booking).delete()
         db.query(models.Device).delete()
@@ -92,4 +101,74 @@ def clear_database(db: Session = Depends(get_db)):
         return {
             "status": "error", 
             "message": f"Ошибка при очистке базы данных: {str(e)}"
+        }
+
+@app.get("/debug/reset-db")
+def reset_database():
+    try:
+        # Удаляем все таблицы
+        models.Base.metadata.drop_all(bind=engine)
+        print("Все таблицы удалены")
+        
+        # Удаляем все последовательности
+        with engine.connect() as conn:
+            conn.execute(text("DROP SEQUENCE IF EXISTS users_id_seq CASCADE"))
+            conn.execute(text("DROP SEQUENCE IF EXISTS devices_id_seq CASCADE"))
+            conn.execute(text("DROP SEQUENCE IF EXISTS bookings_id_seq CASCADE"))
+            conn.commit()
+            print("Все последовательности удалены")
+        
+        # Удаляем и пересоздаем базу данных
+        db_params = {
+            "dbname": "ourlab",
+            "user": "postgres",
+            "password": "postgres",
+            "host": "postgres",
+            "port": "5432"
+        }
+        
+        # Подключаемся к postgres для удаления базы данных
+        conn = psycopg2.connect(**db_params)
+        conn.autocommit = True
+        cur = conn.cursor()
+        
+        # Закрываем все соединения с базой данных
+        cur.execute("""
+            SELECT pg_terminate_backend(pg_stat_activity.pid)
+            FROM pg_stat_activity
+            WHERE pg_stat_activity.datname = 'ourlab'
+            AND pid <> pg_backend_pid();
+        """)
+        
+        # Удаляем базу данных
+        cur.execute("DROP DATABASE IF EXISTS ourlab")
+        print("База данных удалена")
+        
+        # Создаем базу данных заново
+        cur.execute("CREATE DATABASE ourlab")
+        print("База данных создана")
+        
+        cur.close()
+        conn.close()
+        
+        # Создаем таблицы заново
+        models.Base.metadata.create_all(bind=engine)
+        print("Все таблицы пересозданы")
+        
+        # Создаем последовательности заново
+        with engine.connect() as conn:
+            conn.execute(text("CREATE SEQUENCE users_id_seq"))
+            conn.execute(text("CREATE SEQUENCE devices_id_seq"))
+            conn.execute(text("CREATE SEQUENCE bookings_id_seq"))
+            conn.commit()
+            print("Все последовательности пересозданы")
+        
+        return {
+            "status": "success", 
+            "message": "База данных успешно сброшена и пересоздана"
+        }
+    except Exception as e:
+        return {
+            "status": "error", 
+            "message": f"Ошибка при сбросе базы данных: {str(e)}"
         }

@@ -1,30 +1,26 @@
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom'; // Для редиректа после успешного входа
+import { useHistory } from 'react-router-dom'; 
 
 const LoginPage = () => {
   const history = useHistory();
 
-  // Состояние для хранения данных формы
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isRegistering, setIsRegistering] = useState(false); // Для переключения между входом и регистрацией
+  const [isRegistering, setIsRegistering] = useState(false); 
   const [error, setError] = useState('');
 
-  // Функция для обработки отправки формы
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
       let response;
       if (isRegistering) {
-        // Если регистрация, отправляем данные для создания нового пользователя
         response = await fetch('/api/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
         });
       } else {
-        // Если вход, отправляем данные для аутентификации
         response = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -38,10 +34,8 @@ const LoginPage = () => {
         throw new Error(data.message || 'Ошибка при входе или регистрации');
       }
 
-      // Сохраняем токен в localStorage для дальнейшего использования
       localStorage.setItem('authToken', data.token);
 
-      // Редиректим на главную страницу или страницу профиля
       history.push('/dashboard');
     } catch (error) {
       setError(error.message);
