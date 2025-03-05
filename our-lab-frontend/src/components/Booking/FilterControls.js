@@ -1,6 +1,6 @@
 import React from 'react';
 
-const FilterControls = ({ filter, onFilterChange, onCreateBooking }) => {
+const FilterControls = ({ filter, onFilterChange, onCreateBooking, onExportToExcel }) => {
   return (
     <div className="bookings-actions">
       <div className="filter-controls">
@@ -23,12 +23,20 @@ const FilterControls = ({ filter, onFilterChange, onCreateBooking }) => {
           Отменённые
         </button>
       </div>
-      <button 
-        className="create-booking-btn"
-        onClick={onCreateBooking}
-      >
-        Создать бронирование
-      </button>
+      <div className="action-buttons">
+        <button 
+          className="export-button"
+          onClick={onExportToExcel}
+        >
+          Выгрузить в Excel
+        </button>
+        <button 
+          className="create-booking-btn"
+          onClick={onCreateBooking}
+        >
+          Создать бронирование
+        </button>
+      </div>
     </div>
   );
 };

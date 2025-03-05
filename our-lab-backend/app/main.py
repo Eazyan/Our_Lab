@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from .routers import devices, bookings, auth
 from . import models
-from .database import engine, get_db, SessionLocal
+from .database import engine, get_db
 from sqlalchemy.orm import Session
 import time
 import psycopg2
@@ -10,7 +10,6 @@ import os
 from sqlalchemy import text
 
 def wait_for_db():
-    db_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@postgres/ourlab")
     db_params = {
         "dbname": "ourlab",
         "user": "postgres",

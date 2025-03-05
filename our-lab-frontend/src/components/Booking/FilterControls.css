@@ -1,0 +1,89 @@
+.bookings-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.filter-btn.active {
+  background-color: #2196f3;
+  color: white;
+  border-color: #2196f3;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.export-button {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.2);
+}
+
+.export-button:hover {
+  background-color: #45a049;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+  transform: translateY(-1px);
+}
+
+.create-booking-btn {
+  padding: 10px 20px;
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2);
+}
+
+.create-booking-btn:hover {
+  background-color: #1976d2;
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .bookings-actions {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .filter-controls {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .action-buttons {
+    width: 100%;
+    justify-content: center;
+  }
+} 

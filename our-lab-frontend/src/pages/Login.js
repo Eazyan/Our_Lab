@@ -1,78 +1,93 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { authService } from '../services/authService';
+import { toast } from 'react-toastify';
+import '../styles/Login.css';
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
-  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
 
     try {
-      let response;
       if (isRegistering) {
-        response = await fetch(`${process.env.REACT_APP_API_URL}/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
+        await authService.register({
+          email,
+          password,
+          fullName: email.split('@')[0], // Временное имя пользователя
+          role: 'student'
         });
+        toast.success('Регистрация успешна! Теперь вы можете войти.');
+        setIsRegistering(false);
       } else {
-        response = await fetch(`${process.env.REACT_APP_API_URL}/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
+        const response = await authService.login({ email, password });
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+        toast.success('Вход выполнен успешно!');
+        navigate('/dashboard');
       }
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Ошибка при входе или регистрации');
-      }
-
-      localStorage.setItem('authToken', data.token);
-      navigate('/dashboard');
     } catch (error) {
-      setError(error.message);
+      console.error('Ошибка:', error);
+      if (error.response?.data?.detail) {
+        toast.error(error.response.data.detail);
+      } else {
+        toast.error('Произошла ошибка при входе или регистрации');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="login-container">
-      <h2>{isRegistering ? 'Регистрация' : 'Вход'}</h2>
+      <div className="login-box">
+        <h2>{isRegistering ? 'Регистрация' : 'Вход'}</h2>
 
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Email:</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Email:</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+          <div className="form-group">
+            <label>Пароль:</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={isLoading}
+            />
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={isLoading}
+            className={isLoading ? 'loading' : ''}
+          >
+            {isLoading ? 'Загрузка...' : (isRegistering ? 'Зарегистрироваться' : 'Войти')}
+          </button>
+        </form>
+
+        <div className="toggle-form">
+          <button 
+            onClick={() => setIsRegistering(!isRegistering)}
+            disabled={isLoading}
+          >
+            {isRegistering ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Зарегистрироваться'}
+          </button>
         </div>
-        <div>
-          <label>Пароль:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-
-        <button type="submit">{isRegistering ? 'Зарегистрироваться' : 'Войти'}</button>
-      </form>
-
-      <div>
-        <button onClick={() => setIsRegistering(!isRegistering)}>
-          {isRegistering ? 'Уже есть аккаунт? Войти' : 'Нет аккаунта? Зарегистрироваться'}
-        </button>
       </div>
     </div>
   );

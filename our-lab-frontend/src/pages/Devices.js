@@ -1,180 +1,172 @@
 import React, { useState, useEffect } from 'react';
-import { getDevices, apiUrl } from '../utils/api';
-import axios from 'axios';
+import { deviceService } from '../services/deviceService';
 import { toast } from 'react-toastify';
-import { getToken } from '../utils/auth';
-import '../styles/Devices.css';
+import './Devices.css';
 
 const Devices = () => {
-  const [devices, setDevices] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    status: 'available'
-  });
+    const [devices, setDevices] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [selectedDevice, setSelectedDevice] = useState(null);
+    const [isEditing, setIsEditing] = useState(false);
+    const [isCreating, setIsCreating] = useState(false);
 
-  useEffect(() => {
-    fetchDevices();
-  }, []);
-
-  const fetchDevices = async () => {
-    try {
-      const data = await getDevices();
-      setDevices(data);
-    } catch (error) {
-      console.error('Ошибка при загрузке устройств:', error);
-      toast.error('Не удалось загрузить список устройств');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const token = getToken();
-      const response = await axios.post(`${apiUrl}/devices`, formData, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+    const fetchDevices = async () => {
+        try {
+            setLoading(true);
+            const data = await deviceService.getDevices();
+            setDevices(data);
+        } catch (err) {
+            setError('Ошибка загрузки приборов');
+            console.error('Ошибка:', err);
+            toast.error('Не удалось загрузить список приборов');
+        } finally {
+            setLoading(false);
         }
-      });
+    };
 
-      setDevices(prev => [...prev, response.data]);
-      setShowForm(false);
-      setFormData({ name: '', description: '', status: 'available' });
-      toast.success('Устройство успешно добавлено');
-    } catch (error) {
-      console.error('Ошибка при добавлении устройства:', error);
-      toast.error('Не удалось добавить устройство');
-    }
-  };
+    useEffect(() => {
+        fetchDevices();
+    }, []);
 
-  const handleDelete = async (id) => {
-    try {
-      const token = getToken();
-      await axios.delete(`${apiUrl}/devices/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
+    const handleEdit = (device) => {
+        setSelectedDevice(device);
+        setIsEditing(true);
+    };
+
+    const handleCreate = () => {
+        setSelectedDevice(null);
+        setIsCreating(true);
+    };
+
+    const handleUpdate = async (updatedDevice) => {
+        try {
+            if (isCreating) {
+                await deviceService.createDevice(updatedDevice);
+                toast.success('Прибор успешно создан');
+            } else {
+                await deviceService.updateDevice(selectedDevice.id, updatedDevice);
+                toast.success('Прибор успешно обновлен');
+            }
+            await fetchDevices();
+            setIsEditing(false);
+            setIsCreating(false);
+            setSelectedDevice(null);
+        } catch (err) {
+            console.error('Ошибка:', err);
+            toast.error('Не удалось сохранить прибор');
         }
-      });
+    };
 
-      setDevices(prev => prev.filter(device => device.id !== id));
-      toast.success('Устройство успешно удалено');
-    } catch (error) {
-      console.error('Ошибка при удалении устройства:', error);
-      toast.error('Не удалось удалить устройство');
-    }
-  };
+    const handleDelete = async (id) => {
+        if (window.confirm('Вы уверены, что хотите удалить этот прибор?')) {
+            try {
+                await deviceService.deleteDevice(id);
+                toast.success('Прибор успешно удален');
+                await fetchDevices();
+            } catch (err) {
+                console.error('Ошибка:', err);
+                toast.error('Не удалось удалить прибор');
+            }
+        }
+    };
 
-  if (isLoading) {
+    if (loading) return <div className="loading">Загрузка...</div>;
+    if (error) return <div className="error">{error}</div>;
+
     return (
-      <div className="devices-container loading">
-        <p>Загрузка устройств...</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="devices-container">
-      <h2>Управление оборудованием</h2>
-      
-      <div className="devices-actions">
-        <button 
-          className="add-device-btn"
-          onClick={() => setShowForm(!showForm)}
-        >
-          {showForm ? 'Отменить' : 'Добавить устройство'}
-        </button>
-      </div>
-
-      {showForm && (
-        <div className="device-form">
-          <h3>Новое устройство</h3>
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label htmlFor="name">Название:</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="description">Описание:</label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="status">Статус:</label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-                required
-              >
-                <option value="available">Доступно</option>
-                <option value="in_use">В использовании</option>
-                <option value="maintenance">На обслуживании</option>
-              </select>
-            </div>
-
-            <button type="submit">Добавить</button>
-          </form>
-        </div>
-      )}
-
-      <div className="devices-list">
-        {devices && devices.length > 0 ? (
-          devices.map(device => (
-            <div key={device.id} className="device-card">
-              <div className="device-info">
-                <h3>{device.name}</h3>
-                <p>{device.description}</p>
-                <span className={`status-badge status-${device.status}`}>
-                  {device.status === 'available' && 'Доступно'}
-                  {device.status === 'in_use' && 'В использовании'}
-                  {device.status === 'maintenance' && 'На обслуживании'}
-                </span>
-              </div>
-              <div className="device-actions">
-                <button 
-                  className="delete-btn"
-                  onClick={() => handleDelete(device.id)}
-                >
-                  Удалить
+        <div className="devices-container">
+            <div className="devices-header">
+                <h2>Список приборов</h2>
+                <button onClick={handleCreate} className="create-button">
+                    Добавить прибор
                 </button>
-              </div>
             </div>
-          ))
-        ) : (
-          <div className="no-devices">
-            <p>Нет доступных устройств</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+
+            <div className="devices-grid">
+                {devices.map(device => (
+                    <div key={device.id} className="device-card">
+                        <h3>{device.name}</h3>
+                        <p>{device.description}</p>
+                        <p className={`status ${device.status}`}>
+                            Статус: {device.status === 'available' ? 'Доступен' : 
+                                    device.status === 'in_use' ? 'В использовании' : 
+                                    'На обслуживании'}
+                        </p>
+                        <div className="device-actions">
+                            <button onClick={() => handleEdit(device)} className="edit-button">
+                                Редактировать
+                            </button>
+                            <button onClick={() => handleDelete(device.id)} className="delete-button">
+                                Удалить
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {(isEditing || isCreating) && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <h3>{isCreating ? 'Создание прибора' : 'Редактирование прибора'}</h3>
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            const formData = new FormData(e.target);
+                            handleUpdate({
+                                name: formData.get('name'),
+                                description: formData.get('description'),
+                                status: formData.get('status')
+                            });
+                        }}>
+                            <div className="form-group">
+                                <label htmlFor="name">Название прибора</label>
+                                <input
+                                    type="text"
+                                    id="name"
+                                    name="name"
+                                    defaultValue={selectedDevice?.name}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="description">Описание</label>
+                                <textarea
+                                    id="description"
+                                    name="description"
+                                    defaultValue={selectedDevice?.description}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="status">Статус</label>
+                                <select name="status" defaultValue={selectedDevice?.status || 'available'}>
+                                    <option value="available">Доступен</option>
+                                    <option value="in_use">В использовании</option>
+                                    <option value="maintenance">На обслуживании</option>
+                                </select>
+                            </div>
+                            <div className="modal-actions">
+                                <button type="submit" className="save-button">
+                                    {isCreating ? 'Создать' : 'Сохранить'}
+                                </button>
+                                <button 
+                                    type="button" 
+                                    onClick={() => {
+                                        setIsEditing(false);
+                                        setIsCreating(false);
+                                        setSelectedDevice(null);
+                                    }}
+                                    className="cancel-button"
+                                >
+                                    Отмена
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 };
 
 export default Devices; 

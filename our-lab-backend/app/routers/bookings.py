@@ -128,10 +128,10 @@ async def cancel_booking(
     if not booking:
         raise HTTPException(status_code=404, detail="Бронирование не найдено")
     
-    if booking.status == "Отменено":
+    if booking.status == "cancelled":
         raise HTTPException(status_code=400, detail="Бронирование уже отменено")
     
-    booking.status = "Отменено"
+    booking.status = "cancelled"
     db.commit()
     db.refresh(booking)
     
@@ -161,10 +161,10 @@ async def confirm_booking(
     if not booking:
         raise HTTPException(status_code=404, detail="Бронирование не найдено")
     
-    if booking.status == "Подтверждено":
+    if booking.status == "confirmed":
         raise HTTPException(status_code=400, detail="Бронирование уже подтверждено")
     
-    booking.status = "Подтверждено"
+    booking.status = "confirmed"
     db.commit()
     db.refresh(booking)
     

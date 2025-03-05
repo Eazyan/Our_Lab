@@ -1,0 +1,109 @@
+.devices-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.devices-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.device-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+
+.device-card:hover {
+    transform: translateY(-5px);
+}
+
+.device-card h3 {
+    margin: 0 0 10px 0;
+    color: #333;
+}
+
+.device-card p {
+    margin: 5px 0;
+    color: #666;
+}
+
+.device-card button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.device-card button:hover {
+    background: #0056b3;
+}
+
+.edit-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    max-width: 500px;
+    width: 90%;
+}
+
+.edit-modal h3 {
+    margin: 0 0 20px 0;
+    color: #333;
+}
+
+.edit-modal form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.edit-modal input,
+.edit-modal textarea,
+.edit-modal select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.edit-modal textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.edit-modal button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.edit-modal button[type="submit"] {
+    background: #28a745;
+    color: white;
+}
+
+.edit-modal button[type="button"] {
+    background: #dc3545;
+    color: white;
+}
+
+.edit-modal button:hover {
+    opacity: 0.9;
+} 

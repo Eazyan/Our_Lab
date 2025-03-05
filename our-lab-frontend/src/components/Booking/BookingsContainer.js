@@ -22,12 +22,21 @@ const BookingsContainer = ({
   handleConfirmBooking,
   handleBookingClick
 }) => {
+  const [exportFunction, setExportFunction] = React.useState(null);
+
+  const handleExportToExcel = () => {
+    if (exportFunction) {
+      exportFunction();
+    }
+  };
+
   return (
     <div className="bookings-container">
       <FilterControls
         filter={filter}
         onFilterChange={setFilter}
         onCreateBooking={() => setShowForm(!showForm)}
+        onExportToExcel={handleExportToExcel}
       />
       
       {showForm && (
@@ -44,9 +53,10 @@ const BookingsContainer = ({
         onConfirmBooking={handleConfirmBooking}
         onCancelBooking={handleCancelBooking}
         onBookingClick={handleBookingClick}
+        onExportToExcel={setExportFunction}
       />
 
-      {showModal && (
+      {showModal && selectedBooking && (
         <BookingDetailsModal
           booking={selectedBooking}
           onClose={() => {

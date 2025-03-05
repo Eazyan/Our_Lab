@@ -4,9 +4,50 @@ import './BookingDetailsModal.css';
 const BookingDetailsModal = ({ booking, onClose, onConfirm, onCancel }) => {
   if (!booking) return null;
 
-  const startTime = new Date(booking.startTime);
-  const endTime = new Date(booking.endTime);
-  const createdAt = new Date(booking.created_at);
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    // Преобразуем UTC в локальное время (MSK)
+    const localHours = (date.getUTCHours()).toString().padStart(2, '0');
+    const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+    return `${localHours}:${minutes}`;
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  const formatCreatedDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }) + ', ' + date.toLocaleTimeString('ru-RU', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'pending':
+        return 'Ожидает подтверждения';
+      case 'confirmed':
+        return 'Подтверждено';
+      case 'cancelled':
+        return 'Отменено';
+      case 'completed':
+        return 'Завершено';
+      default:
+        return 'Ожидает подтверждения';
+    }
+  };
 
   return (
     <div className="modal-overlay">
@@ -17,36 +58,25 @@ const BookingDetailsModal = ({ booking, onClose, onConfirm, onCancel }) => {
         <div className="booking-details">
           <div className="detail-row">
             <span className="detail-label">Прибор:</span>
-            <span className="detail-value">{booking.deviceName}</span>
+            <span className="detail-value">{booking.device?.name || booking.deviceName || 'Не указан'}</span>
           </div>
           
           <div className="detail-row">
             <span className="detail-label">Дата:</span>
-            <span className="detail-value">
-              {startTime.toLocaleDateString('ru-RU', { 
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-              })}
-            </span>
+            <span className="detail-value">{formatDate(booking.start_time || booking.startTime)}</span>
           </div>
           
           <div className="detail-row">
             <span className="detail-label">Время:</span>
             <span className="detail-value">
-              {startTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', hour12: false })} - 
-              {endTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', hour12: false })}
+              {formatTime(booking.start_time || booking.startTime)} - {formatTime(booking.end_time || booking.endTime)}
             </span>
           </div>
           
           <div className="detail-row">
             <span className="detail-label">Статус:</span>
             <span className="detail-value status-value">
-              {booking.status === 'Ожидает подтверждения' && 'Ожидание'}
-              {booking.status === 'Подтверждено' && 'Подтверждено'}
-              {booking.status === 'Отменено' && 'Отменено'}
-              {booking.status === 'Завершено' && 'Завершено'}
-              {!booking.status && 'Ожидание'}
+              {getStatusText(booking.status)}
             </span>
           </div>
           
@@ -58,19 +88,12 @@ const BookingDetailsModal = ({ booking, onClose, onConfirm, onCancel }) => {
           <div className="detail-row">
             <span className="detail-label">Создано:</span>
             <span className="detail-value">
-              {createdAt.toLocaleString('ru-RU', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-              })}
+              {formatCreatedDate(booking.created_at || booking.createdAt)}
             </span>
           </div>
 
           <div className="modal-actions">
-            {booking.status === 'Ожидает подтверждения' && (
+            {booking.status === 'pending' && (
               <button 
                 className="confirm-button"
                 onClick={() => {
@@ -81,7 +104,7 @@ const BookingDetailsModal = ({ booking, onClose, onConfirm, onCancel }) => {
                 Подтвердить
               </button>
             )}
-            {(booking.status === 'Ожидает подтверждения' || booking.status === 'Подтверждено') && (
+            {(booking.status === 'pending' || booking.status === 'confirmed') && (
               <button 
                 className="cancel-button"
                 onClick={() => {

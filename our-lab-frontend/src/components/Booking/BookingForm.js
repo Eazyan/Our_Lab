@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import './BookingForm.css';
 
@@ -8,6 +8,44 @@ const BookingForm = ({
   onDeviceChange, 
   onSubmit 
 }) => {
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
+
+  const handleDateChange = (e) => {
+    const date = e.target.value;
+    setSelectedDate(date);
+    setStartTime('');
+    setEndTime('');
+  };
+
+  const handleStartTimeChange = (e) => {
+    const value = e.target.value;
+    setStartTime(value);
+  };
+
+  const handleEndTimeChange = (e) => {
+    const value = e.target.value;
+    if (!startTime || value > startTime) {
+      setEndTime(value);
+    } else {
+      toast.error('Время окончания должно быть позже времени начала');
+    }
+  };
+
+  const handleSubmit = () => {
+    if (!selectedDate || !startTime || !endTime) {
+      toast.error('Укажите дату и время');
+      return;
+    }
+
+    // Создаем даты в UTC
+    const startDateTime = new Date(`${selectedDate}T${startTime}Z`);
+    const endDateTime = new Date(`${selectedDate}T${endTime}Z`);
+
+    onSubmit(startDateTime.toISOString(), endDateTime.toISOString());
+  };
+
   return (
     <div className="booking-form">
       <h3>Новое бронирование</h3>
@@ -27,34 +65,40 @@ const BookingForm = ({
       </div>
       
       <div className="form-group">
-        <label>Дата и время начала:</label>
+        <label>Выберите дату:</label>
         <input 
-          type="datetime-local" 
-          id="start-time"
+          type="date" 
+          value={selectedDate}
+          onChange={handleDateChange}
+          min={new Date().toISOString().split('T')[0]}
         />
       </div>
       
       <div className="form-group">
-        <label>Дата и время окончания:</label>
+        <label>Время начала:</label>
         <input 
-          type="datetime-local" 
-          id="end-time"
+          type="time" 
+          value={startTime}
+          onChange={handleStartTimeChange}
+          disabled={!selectedDate}
+          min="08:30"
+          max="17:00"
         />
       </div>
       
-      <button
-        onClick={() => {
-          const startTime = document.getElementById('start-time').value;
-          const endTime = document.getElementById('end-time').value;
-          
-          if (!startTime || !endTime) {
-            toast.error('Укажите время начала и окончания');
-            return;
-          }
-          
-          onSubmit(startTime, endTime);
-        }}
-      >
+      <div className="form-group">
+        <label>Время окончания:</label>
+        <input 
+          type="time" 
+          value={endTime}
+          onChange={handleEndTimeChange}
+          disabled={!selectedDate || !startTime}
+          min="08:30"
+          max="17:00"
+        />
+      </div>
+      
+      <button onClick={handleSubmit}>
         Забронировать
       </button>
     </div>

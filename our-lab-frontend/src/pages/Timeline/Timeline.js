@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import '../Timeline.css';
-import { getBookings } from '../../utils/api.js';
+import { bookingService } from '../../services/api';
+import './Timeline.css';
 import TimelineControls from './TimelineControls';
 import TimelineView from './TimelineView';
 
@@ -35,46 +35,29 @@ const Timeline = () => {
     setSelectedDate(newDate);
   };
 
-  useEffect(() => {
-    let isMounted = true;
-    
-    const fetchBookings = async () => {
-      if (!isMounted) return;
-      
-      try {
-        setLoading(true);
-        const response = await getBookings();
-        
-        if (isMounted) {
-          const bookingsData = response?.data || response || [];
-          setBookings(bookingsData);
-          setError(null);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError('Не удалось загрузить данные о бронированиях');
-          setBookings([]);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const data = await bookingService.getBookings();
+      setBookings(data);
+    } catch (err) {
+      setError('Ошибка загрузки бронирований');
+      console.error('Ошибка:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchBookings();
-    
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   const filteredBookings = bookings.filter(booking => {
-    if (!booking || !booking.startTime) {
+    if (!booking || !booking.start_time) {
       return false;
     }
     
-    const bookingDate = new Date(booking.startTime);
+    const bookingDate = new Date(booking.start_time);
     const selected = new Date(selectedDate);
     
     console.log('Сравнение дат:', {
@@ -100,7 +83,7 @@ const Timeline = () => {
 
   return (
     <div className="timeline-container">
-      <h2>Расписание бронирований</h2>
+      <h2>Временная шкала бронирований</h2>
       
       <TimelineControls 
         selectedDate={selectedDate}

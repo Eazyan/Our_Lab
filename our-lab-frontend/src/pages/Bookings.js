@@ -15,7 +15,7 @@ const Bookings = () => {
     selectedDevice,
     bookings,
     filter,
-    isLoading,
+    loading,
     showForm,
     selectedBooking,
     showModal,
@@ -25,12 +25,12 @@ const Bookings = () => {
     setShowModal,
     handleDeviceChange,
     handleBookingSuccess,
-    handleCancelBooking,
-    handleConfirmBooking,
+    cancelBooking,
+    confirmBooking,
     handleBookingClick
   } = useBookings();
 
-  if (isLoading) {
+  if (loading) {
     return <LoadingState />;
   }
 
@@ -51,8 +51,8 @@ const Bookings = () => {
         setShowModal={setShowModal}
         handleDeviceChange={handleDeviceChange}
         handleBookingSuccess={handleBookingSuccess}
-        handleCancelBooking={handleCancelBooking}
-        handleConfirmBooking={handleConfirmBooking}
+        handleCancelBooking={cancelBooking}
+        handleConfirmBooking={confirmBooking}
         handleBookingClick={handleBookingClick}
       />
     </div>

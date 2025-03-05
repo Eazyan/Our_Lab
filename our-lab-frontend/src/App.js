@@ -6,6 +6,7 @@ import Timeline from './pages/Timeline';
 import Bookings from './pages/Bookings';
 import Devices from './pages/Devices';
 import Profile from './pages/Profile';
+import Register from './pages/Register';
 import Navigation from './components/Navigation';
 import { getUserRole, isAuthenticated } from './utils/auth';
 import { ToastContainer } from 'react-toastify';
@@ -67,6 +68,7 @@ function App() {
         <main className={isAuth ? "main-content" : "full-content"}>
           <Routes>
             <Route path="/" element={isAuth ? <Navigate to="/dashboard" /> : <EntryPage />} />
+            <Route path="/register" element={!isAuth ? <Register /> : <Navigate to="/dashboard" />} />
             <Route path="/dashboard" element={isAuth ? <Dashboard /> : <Navigate to="/" />} />
             <Route path="/timeline" element={isAuth ? <Timeline /> : <Navigate to="/" />} />
             <Route 
