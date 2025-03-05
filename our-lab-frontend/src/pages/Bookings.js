@@ -3,6 +3,7 @@ import useBookings from '../hooks/useBookings';
 import PageHeader from '../components/Booking/PageHeader';
 import BookingsContainer from '../components/Booking/BookingsContainer';
 import LoadingState from '../components/Booking/LoadingState';
+import '../components/Booking/BookingHistory.css';
 import '../styles/components/BookingList.css';
 import '../styles/components/BookingForm.css';
 import '../styles/components/FilterControls.css';
@@ -27,6 +28,7 @@ const Bookings = () => {
     handleBookingSuccess,
     cancelBooking,
     confirmBooking,
+    deleteBooking,
     handleBookingClick
   } = useBookings();
 
@@ -53,7 +55,7 @@ const Bookings = () => {
         handleBookingSuccess={handleBookingSuccess}
         handleCancelBooking={cancelBooking}
         handleConfirmBooking={confirmBooking}
-        handleBookingClick={handleBookingClick}
+        handleBookingClick={deleteBooking}
       />
     </div>
   );

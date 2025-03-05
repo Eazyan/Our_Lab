@@ -1,121 +1,31 @@
 import React from 'react';
 import './BookingDetailsModal.css';
 
-const BookingDetailsModal = ({ booking, onClose, onConfirm, onCancel }) => {
-  if (!booking) return null;
-
-  const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    const localHours = (date.getUTCHours()).toString().padStart(2, '0');
-    const minutes = date.getUTCMinutes().toString().padStart(2, '0');
-    return `${localHours}:${minutes}`;
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
-
-  const formatCreatedDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }) + ', ' + date.toLocaleTimeString('ru-RU', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'pending':
-        return 'Ожидает подтверждения';
-      case 'confirmed':
-        return 'Подтверждено';
-      case 'cancelled':
-        return 'Отменено';
-      case 'completed':
-        return 'Завершено';
-      default:
-        return 'Ожидает подтверждения';
-    }
-  };
-
+const BookingDetailsModal = ({
+  booking,
+  onClose,
+  formatDate,
+  formatTime,
+  getStatusText
+}) => {
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <button className="modal-close" onClick={onClose}>×</button>
-        <h2>Подробная информация о бронировании</h2>
-        
-        <div className="booking-details">
-          <div className="detail-row">
-            <span className="detail-label">Прибор:</span>
-            <span className="detail-value">{booking.device?.name || booking.deviceName || 'Не указан'}</span>
-          </div>
-          
-          <div className="detail-row">
-            <span className="detail-label">Дата:</span>
-            <span className="detail-value">{formatDate(booking.start_time || booking.startTime)}</span>
-          </div>
-          
-          <div className="detail-row">
-            <span className="detail-label">Время:</span>
-            <span className="detail-value">
-              {formatTime(booking.start_time || booking.startTime)} - {formatTime(booking.end_time || booking.endTime)}
-            </span>
-          </div>
-          
-          <div className="detail-row">
-            <span className="detail-label">Статус:</span>
-            <span className="detail-value status-value">
-              {getStatusText(booking.status)}
-            </span>
-          </div>
-          
-          <div className="detail-row">
-            <span className="detail-label">Email пользователя:</span>
-            <span className="detail-value">{booking.userEmail || 'Не указан'}</span>
-          </div>
-          
-          <div className="detail-row">
-            <span className="detail-label">Создано:</span>
-            <span className="detail-value">
-              {formatCreatedDate(booking.created_at || booking.createdAt)}
-            </span>
-          </div>
-
-          <div className="modal-actions">
-            {booking.status === 'pending' && (
-              <button 
-                className="confirm-button"
-                onClick={() => {
-                  onConfirm(booking.id);
-                  onClose();
-                }}
-              >
-                Подтвердить
-              </button>
-            )}
-            {(booking.status === 'pending' || booking.status === 'confirmed') && (
-              <button 
-                className="cancel-button"
-                onClick={() => {
-                  onCancel(booking.id);
-                  onClose();
-                }}
-              >
-                Отменить
-              </button>
-            )}
-          </div>
+    <div className="booking-details-modal" onClick={onClose}>
+      <div className="booking-details-content" onClick={e => e.stopPropagation()}>
+        <h4>Подробная информация о бронировании</h4>
+        <div className="booking-details-info">
+          <p><strong>Устройство:</strong> {booking.deviceName}</p>
+          <p><strong>Дата:</strong> {formatDate(booking.startTime || booking.start_time)}</p>
+          <p><strong>Время:</strong> {formatTime(booking.startTime || booking.start_time)} - {formatTime(booking.endTime || booking.end_time)}</p>
+          <p><strong>Пользователь:</strong> {booking.userName}</p>
+          <p><strong>Email:</strong> {booking.userEmail}</p>
+          <p><strong>Статус:</strong> {getStatusText(booking.status)}</p>
+          {booking.comment && (
+            <p><strong>Комментарий:</strong> {booking.comment}</p>
+          )}
         </div>
+        <button className="close-details-button" onClick={onClose}>
+          Закрыть
+        </button>
       </div>
     </div>
   );

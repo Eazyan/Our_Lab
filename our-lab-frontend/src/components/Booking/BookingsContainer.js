@@ -1,5 +1,5 @@
 import React from 'react';
-import BookingList from './BookingList';
+import BookingHistory from './BookingHistory';
 import BookingForm from './BookingForm';
 import FilterControls from './FilterControls';
 import BookingDetailsModal from './BookingDetailsModal';
@@ -8,11 +8,9 @@ const BookingsContainer = ({
   devices,
   selectedDevice,
   bookings,
-  filter,
   showForm,
   selectedBooking,
   showModal,
-  setFilter,
   setShowForm,
   setSelectedBooking,
   setShowModal,
@@ -22,21 +20,10 @@ const BookingsContainer = ({
   handleConfirmBooking,
   handleBookingClick
 }) => {
-  const [exportFunction, setExportFunction] = React.useState(null);
-
-  const handleExportToExcel = () => {
-    if (exportFunction) {
-      exportFunction();
-    }
-  };
-
   return (
     <div className="bookings-container">
       <FilterControls
-        filter={filter}
-        onFilterChange={setFilter}
         onCreateBooking={() => setShowForm(!showForm)}
-        onExportToExcel={handleExportToExcel}
       />
       
       {showForm && (
@@ -48,12 +35,12 @@ const BookingsContainer = ({
         />
       )}
       
-      <BookingList
+      <BookingHistory
         bookings={bookings}
-        onConfirmBooking={handleConfirmBooking}
-        onCancelBooking={handleCancelBooking}
-        onBookingClick={handleBookingClick}
-        onExportToExcel={setExportFunction}
+        devices={devices}
+        onCancel={handleCancelBooking}
+        onConfirm={handleConfirmBooking}
+        onDelete={handleBookingClick}
       />
 
       {showModal && selectedBooking && (

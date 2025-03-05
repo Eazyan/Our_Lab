@@ -28,6 +28,9 @@ export const authService = {
                 email: credentials.email,
                 password: credentials.password
             });
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+            localStorage.setItem('userEmail', response.data.user.email);
             return response.data;
         } catch (error) {
             console.error('Ошибка входа:', error);
@@ -38,6 +41,7 @@ export const authService = {
     logout: () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('userEmail');
         window.location.href = '/';
     }
 }; 

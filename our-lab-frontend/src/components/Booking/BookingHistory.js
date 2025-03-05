@@ -1,10 +1,40 @@
-import React, { useState } from 'react';
-import './BookingHistory.css';
+import React, { useState, useEffect } from 'react';
+import { getUserRole } from '../../utils/auth';
+import BookingFilters from './BookingFilters';
+import BookingItem from './BookingItem';
+import BookingDetailsModal from './BookingDetailsModal';
 import { exportBookingsToExcel } from '../../utils/excelExport';
+import jwtDecode from 'jwt-decode';
+import './BookingHistory.css';
 
-const BookingHistory = ({ bookings, devices, onCancel, onConfirm }) => {
-  const [sortBy, setSortBy] = useState('pending');
-  const [showOnlyConfirmed, setShowOnlyConfirmed] = useState(false);
+const BookingHistory = ({ bookings, devices, onCancel, onConfirm, onDelete }) => {
+  const [showOnlyMine, setShowOnlyMine] = useState(false);
+  const [showOnlyToday, setShowOnlyToday] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [selectedDevices, setSelectedDevices] = useState([]);
+  const userRole = getUserRole();
+  const token = document.cookie.split('; ').find(row => row.startsWith('auth_token='))?.split('=')[1];
+  const userEmail = token ? jwtDecode(token).sub : null;
+
+  useEffect(() => {
+    if (bookings && bookings.length > 0) {
+      console.log('Пример бронирования:', {
+        booking: bookings[0],
+        fields: Object.keys(bookings[0]),
+        userEmailField: bookings[0].userEmail || bookings[0].user_email,
+        currentUserEmail: userEmail,
+        token: token,
+        decodedToken: token ? jwtDecode(token) : null
+      });
+    }
+  }, [bookings, userEmail, token]);
+
+  useEffect(() => {
+    if (devices && devices.length > 0) {
+      setSelectedDevices(devices.map(device => device.id));
+    }
+  }, [devices]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Дата не указана';
@@ -13,7 +43,6 @@ const BookingHistory = ({ bookings, devices, onCancel, onConfirm }) => {
       const date = new Date(dateString);
       
       if (isNaN(date.getTime())) {
-        console.error('Невалидная дата:', dateString);
         return 'Некорректная дата';
       }
       
@@ -39,7 +68,7 @@ const BookingHistory = ({ bookings, devices, onCancel, onConfirm }) => {
         let hours = parseInt(timeMatch[1]);
         const minutes = timeMatch[2];
         
-        hours = (hours + 10) % 24;
+        hours = (hours) % 24;
         
         return `${hours.toString().padStart(2, '0')}:${minutes}`;
       }
@@ -69,127 +98,143 @@ const BookingHistory = ({ bookings, devices, onCancel, onConfirm }) => {
     exportBookingsToExcel(bookings, devices, formatDate, formatTime, getStatusText);
   };
 
-  const filteredAndSortedBookings = bookings
-    .filter(booking => {
-      if (showOnlyConfirmed) {
-        return booking.status === 'confirmed';
-      }
-      if (sortBy === 'all') {
-        return true;
-      }
-      if (sortBy === 'all_pending') {
-        return booking.status === 'pending';
-      }
-      return booking.status === sortBy;
-    })
-    .sort((a, b) => {
-      if (sortBy === 'all') return 0;
-      if (sortBy === 'all_pending') return 0;
-      if (a.status === sortBy && b.status !== sortBy) return -1;
-      if (a.status !== sortBy && b.status === sortBy) return 1;
-      return 0;
+  const isToday = (dateString) => {
+    const today = new Date();
+    const date = new Date(dateString);
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
+  };
+
+  const handleDeviceChange = (deviceId) => {
+    if (selectedDevices.includes(deviceId)) {
+      setSelectedDevices(selectedDevices.filter(id => id !== deviceId));
+    } else {
+      setSelectedDevices([...selectedDevices, deviceId]);
+    }
+  };
+
+  const handleSelectAllDevices = () => {
+    if (selectedDevices.length === devices.length) {
+      setSelectedDevices([]);
+    } else {
+      setSelectedDevices(devices.map(device => device.id));
+    }
+  };
+
+  const filteredBookings = bookings.filter(booking => {
+    const deviceId = booking.deviceId || booking.device_id;
+    const bookingEmail = booking.userEmail || booking.user_email;
+    
+    console.log('Проверка бронирования:', {
+      booking,
+      deviceCheck: selectedDevices.includes(deviceId),
+      emailCheck: showOnlyMine ? bookingEmail === userEmail : true,
+      userEmail: userEmail,
+      bookingEmail: bookingEmail,
+      showOnlyMine: showOnlyMine,
+      dateCheck: !showOnlyToday || isToday(booking.startTime || booking.start_time),
+      statusCheck: filterStatus === 'all' || booking.status === filterStatus
     });
+    
+    // Проверка устройства
+    if (selectedDevices.length > 0 && !selectedDevices.includes(deviceId)) {
+      return false;
+    }
+    
+    // Проверка email
+    if (showOnlyMine && bookingEmail !== userEmail) {
+      return false;
+    }
+    
+    // Проверка даты
+    if (showOnlyToday && !isToday(booking.startTime || booking.start_time)) {
+      return false;
+    }
+    
+    // Проверка статуса
+    if (filterStatus !== 'all' && booking.status !== filterStatus) {
+      return false;
+    }
+    
+    return true;
+  });
+
+  const canManageBookings = userRole === 'teacher' || userRole === 'admin';
+  const canDeleteBookings = userRole === 'admin';
+  const isStudent = userRole === 'student';
+
+  const handleBookingClick = (booking) => {
+    setSelectedBooking(booking);
+  };
+
+  const closeDetails = () => {
+    setSelectedBooking(null);
+  };
 
   return (
-    <div>
-      <div className="booking-header">
+    <div className="booking-history">
+      <div className="booking-history-header">
         <h3>История бронирований</h3>
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <input
-                type="checkbox"
-                checked={showOnlyConfirmed}
-                onChange={(e) => setShowOnlyConfirmed(e.target.checked)}
-              />
-              Только подтверждённые
-            </label>
-          </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              className={`filter-button ${sortBy === 'all' ? 'active' : ''}`}
-              onClick={() => setSortBy('all')}
-            >
-              Все
-            </button>
-            <button
-              className={`filter-button ${sortBy === 'all_pending' ? 'active' : ''}`}
-              onClick={() => setSortBy('all_pending')}
-            >
-              Все ожидающие
-            </button>
-            <button
-              className={`filter-button ${sortBy === 'confirmed' ? 'active' : ''}`}
-              onClick={() => setSortBy('confirmed')}
-            >
-              Подтверждено
-            </button>
-            <button
-              className={`filter-button ${sortBy === 'cancelled' ? 'active' : ''}`}
-              onClick={() => setSortBy('cancelled')}
-            >
-              Отменено
-            </button>
-            <button
-              className={`filter-button ${sortBy === 'completed' ? 'active' : ''}`}
-              onClick={() => setSortBy('completed')}
-            >
-              Завершено
-            </button>
-          </div>
-          <button 
-            onClick={handleExportToExcel}
-            className="export-button"
-          >
-            Выгрузить в Excel
-          </button>
-        </div>
+        <BookingFilters
+          showOnlyMine={showOnlyMine}
+          setShowOnlyMine={setShowOnlyMine}
+          showOnlyToday={showOnlyToday}
+          setShowOnlyToday={setShowOnlyToday}
+          filterStatus={filterStatus}
+          setFilterStatus={setFilterStatus}
+          devices={devices}
+          selectedDevices={selectedDevices}
+          handleDeviceChange={handleDeviceChange}
+          handleSelectAllDevices={handleSelectAllDevices}
+          canManageBookings={canManageBookings}
+          handleExportToExcel={handleExportToExcel}
+        />
       </div>
-      {filteredAndSortedBookings.length === 0 ? (
-        <p>Нет бронирований</p>
+
+      {filteredBookings.length === 0 ? (
+        <p className="no-history-bookings">Нет бронирований</p>
       ) : (
-        <div className="booking-list">
-          {filteredAndSortedBookings.map((booking) => {
+        <div className="booking-history-list">
+          {filteredBookings.map((booking) => {
             const device = devices.find((device) => 
               device.id === booking.deviceId || 
               device.id === booking.device_id
             );
             
+            const showActions = !isStudent && (
+              (userRole === 'admin') ||
+              (userRole === 'teacher' && booking.userEmail !== userEmail)
+            );
+
             return (
-              <div key={booking.id} className="booking-item">
-                <div className="booking-info">
-                  <div className="booking-device">
-                    {booking.deviceName || (device ? device.name : 'Неизвестный прибор')}
-                  </div>
-                  <div className="booking-time">
-                    {formatDate(booking.startTime || booking.start_time)} {formatTime(booking.startTime || booking.start_time)} - {formatTime(booking.endTime || booking.end_time)}
-                  </div>
-                  <div className="booking-status">
-                    Статус: <strong>{getStatusText(booking.status)}</strong>
-                  </div>
-                </div>
-                <div className="booking-actions">
-                  {booking.status === 'pending' && (
-                    <>
-                      <button 
-                        onClick={() => onConfirm(booking.id)}
-                        className="confirm-button"
-                      >
-                        Подтвердить
-                      </button>
-                      <button 
-                        onClick={() => onCancel(booking.id)}
-                        className="cancel-button"
-                      >
-                        Отменить
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
+              <BookingItem
+                key={booking.id}
+                booking={booking}
+                device={device}
+                showActions={showActions}
+                canDeleteBookings={canDeleteBookings}
+                onConfirm={onConfirm}
+                onCancel={onCancel}
+                onDelete={onDelete}
+                onClick={handleBookingClick}
+                formatDate={formatDate}
+                formatTime={formatTime}
+                getStatusText={getStatusText}
+              />
             );
           })}
         </div>
+      )}
+
+      {selectedBooking && (
+        <BookingDetailsModal
+          booking={selectedBooking}
+          onClose={closeDetails}
+          formatDate={formatDate}
+          formatTime={formatTime}
+          getStatusText={getStatusText}
+        />
       )}
     </div>
   );

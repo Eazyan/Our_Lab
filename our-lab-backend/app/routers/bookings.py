@@ -7,23 +7,37 @@ import pytz
 from ..database import get_db
 from .. import models, schemas
 from ..utils import get_current_user
+from ..routers.auth import get_current_user
 
 router = APIRouter(
     prefix="/bookings",
     tags=["bookings"]
 )
 
+def check_booking_permissions(user: models.User, action: str):
+    if action == "create":
+        return True 
+    elif action in ["confirm", "cancel"]:
+        return user.role in ["teacher", "admin"] 
+    elif action == "delete":
+        return user.role == "admin" 
+    return False
+
 @router.get("/", response_model=List[dict])
 async def get_bookings(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    bookings = db.query(models.Booking).filter(models.Booking.user_id == current_user.id).all()
+    """Получить все бронирования"""
+    bookings = db.query(models.Booking).all()
     result = []
     for booking in bookings:
         device = db.query(models.Device).filter(models.Device.id == booking.device_id).first()
         if not device:
             continue
+            
+        # Получаем пользователя для бронирования
+        user = db.query(models.User).filter(models.User.id == booking.user_id).first()
             
         booking_response = {
             "id": booking.id,
@@ -33,7 +47,8 @@ async def get_bookings(
             "endTime": booking.end_time.isoformat(),
             "status": booking.status,
             "created_at": booking.created_at.isoformat() if booking.created_at else None,
-            "userEmail": booking.user.email if booking.user else None
+            "userEmail": user.email if user else None,
+            "userName": user.full_name if user else "Удаленный пользователь"
         }
         result.append(booking_response)
     return result
@@ -44,6 +59,10 @@ async def create_booking(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    """Создать новое бронирование"""
+    if not check_booking_permissions(current_user, "create"):
+        raise HTTPException(status_code=403, detail="Недостаточно прав для создания бронирования")
+    
     device = db.query(models.Device).filter(models.Device.id == booking.device_id).first()
     if not device:
         raise HTTPException(status_code=404, detail=f"Прибор с ID {booking.device_id} не найден")
@@ -124,6 +143,10 @@ async def cancel_booking(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    """Отменить бронирование"""
+    if not check_booking_permissions(current_user, "cancel"):
+        raise HTTPException(status_code=403, detail="Недостаточно прав для отмены бронирования")
+    
     booking = db.query(models.Booking).filter(models.Booking.id == booking_id).first()
     if not booking:
         raise HTTPException(status_code=404, detail="Бронирование не найдено")
@@ -157,6 +180,10 @@ async def confirm_booking(
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    """Подтвердить бронирование"""
+    if not check_booking_permissions(current_user, "confirm"):
+        raise HTTPException(status_code=403, detail="Недостаточно прав для подтверждения бронирования")
+    
     booking = db.query(models.Booking).filter(models.Booking.id == booking_id).first()
     if not booking:
         raise HTTPException(status_code=404, detail="Бронирование не найдено")

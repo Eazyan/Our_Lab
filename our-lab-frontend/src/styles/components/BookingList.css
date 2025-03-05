@@ -84,6 +84,27 @@
   color: #666;
 }
 
+.delete-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.delete-button:hover {
+  background-color: #c82333;
+}
+
+.booking-user {
+  font-size: 14px;
+  color: #666;
+  margin: 4px 0;
+}
+
 @media (max-width: 768px) {
   .bookings-header,
   .booking-row {
