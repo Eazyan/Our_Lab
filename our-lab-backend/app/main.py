@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from .routers import devices, bookings, auth
+from .routers import devices, bookings, auth, profile
 from . import models
 from .database import engine, get_db
 from sqlalchemy.orm import Session
@@ -58,6 +58,7 @@ app.add_middleware(
 app.include_router(devices.router)
 app.include_router(bookings.router)
 app.include_router(auth.router)
+app.include_router(profile.router)
 
 @app.get("/")
 def read_root():

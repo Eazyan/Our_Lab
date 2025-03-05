@@ -11,7 +11,7 @@ const Profile = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [userData, setUserData] = useState({
-    full_name: '',
+    name: '',
     email: '',
     phone: '',
     group: '',
@@ -32,7 +32,16 @@ const Profile = () => {
           profileService.getProfile(),
           profileService.getStats()
         ]);
-        setUserData(profileData);
+        
+        const formattedProfileData = {
+          name: profileData.name || '',
+          email: profileData.email || '',
+          phone: profileData.phone || '',
+          group: profileData.group || '',
+          department: profileData.department || ''
+        };
+        
+        setUserData(formattedProfileData);
         setStats(statsData);
       } catch (err) {
         setError('Ошибка загрузки данных профиля');
@@ -94,10 +103,10 @@ const Profile = () => {
     <div className="profile-container">
       <div className="profile-header">
         <div className="profile-avatar">
-          {userData.full_name.charAt(0)}
+          {userData.name.charAt(0)}
         </div>
         <div className="profile-title">
-          <h2>{userData.full_name}</h2>
+          <h2>{userData.name}</h2>
           <p>{getRoleName(role)}</p>
         </div>
       </div>
@@ -109,8 +118,8 @@ const Profile = () => {
             <div className="edit-form">
               <input
                 type="text"
-                value={userData.full_name}
-                onChange={(e) => setUserData({...userData, full_name: e.target.value})}
+                value={userData.name}
+                onChange={(e) => setUserData({...userData, name: e.target.value})}
                 placeholder="ФИО"
               />
               <input
