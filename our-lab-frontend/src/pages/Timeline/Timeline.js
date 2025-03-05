@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { bookingService } from '../../services/api';
+import { bookingService, deviceService } from '../../services/api';
 import './Timeline.css';
 import TimelineControls from './TimelineControls';
 import TimelineView from './TimelineView';
+import TimelineFilters from './TimelineFilters';
+import { getTimeFromDate } from './timeUtils';
 
-const Timeline = () => {
+const Timeline = ({ bookings: initialBookings, devices: initialDevices }) => {
   const startTime = 8;  
   const endTime = 17;   
   const timeSlots = [];
@@ -13,10 +15,20 @@ const Timeline = () => {
     timeSlots.push(`${i}:00`, `${i}:30`);
   }
 
-  const [bookings, setBookings] = useState([]);
+  const [bookings, setBookings] = useState(initialBookings || []);
+  const [devices, setDevices] = useState(initialDevices || []);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [error, setError] = useState(null);
+  const [selectedDevices, setSelectedDevices] = useState([]);
+  const [showCancelled, setShowCancelled] = useState(true);
+  const [showOnlyConfirmed, setShowOnlyConfirmed] = useState(false);
+
+  const convertToVladivostokTime = (dateString) => {
+    const date = new Date(dateString);
+    date.setUTCHours(date.getUTCHours() - 10);
+    return date;
+  };
 
   const goToNextDay = () => {
     const nextDay = new Date(selectedDate);
@@ -48,30 +60,61 @@ const Timeline = () => {
     }
   };
 
+  const fetchDevices = async () => {
+    try {
+      const data = await deviceService.getDevices();
+      setDevices(data);
+      setSelectedDevices(data.map(device => device.id));
+    } catch (err) {
+      setError('Ошибка загрузки устройств');
+      console.error('Ошибка:', err);
+    }
+  };
+
   useEffect(() => {
     fetchBookings();
+    fetchDevices();
   }, []);
 
   const filteredBookings = bookings.filter(booking => {
-    if (!booking || !booking.start_time) {
-      return false;
-    }
+    if (!booking) return false;
+
+    const startTime = booking.start_time || booking.startTime;
+    if (!startTime) return false;
     
-    const bookingDate = new Date(booking.start_time);
+    const bookingDate = convertToVladivostokTime(startTime);
     const selected = new Date(selectedDate);
     
-    console.log('Сравнение дат:', {
-      bookingDate: bookingDate.toISOString(),
-      selectedDate: selected.toISOString(),
-      sameDate: bookingDate.getDate() === selected.getDate(),
-      sameMonth: bookingDate.getMonth() === selected.getMonth(),
-      sameYear: bookingDate.getFullYear() === selected.getFullYear()
-    });
+    selected.setHours(0, 0, 0, 0);
+    const compareDate = new Date(bookingDate);
+    compareDate.setHours(0, 0, 0, 0);
     
-    return bookingDate.getDate() === selected.getDate() &&
-           bookingDate.getMonth() === selected.getMonth() &&
-           bookingDate.getFullYear() === selected.getFullYear();
+    const deviceId = booking.deviceId || booking.device_id;
+    const status = booking.status || 'pending';
+
+    // Фильтр по выбранным устройствам
+    if (!selectedDevices.includes(deviceId)) {
+      return false;
+    }
+
+    // Фильтр по статусу "отменено"
+    if (!showCancelled && status === 'cancelled') {
+      return false;
+    }
+
+    // Фильтр "только подтвержденные"
+    if (showOnlyConfirmed && status !== 'confirmed') {
+      return false;
+    }
+
+    return compareDate.getTime() === selected.getTime();
   });
+
+  const processedBookings = filteredBookings.map(booking => ({
+    ...booking,
+    start_time: convertToVladivostokTime(booking.start_time || booking.startTime).toISOString(),
+    end_time: convertToVladivostokTime(booking.end_time || booking.endTime).toISOString()
+  }));
 
   if (loading) {
     return <div className="loading">Загрузка данных...</div>;
@@ -92,7 +135,17 @@ const Timeline = () => {
         handleDateChange={handleDateChange}
       />
       
-      {filteredBookings.length === 0 ? (
+      <TimelineFilters
+        devices={devices}
+        selectedDevices={selectedDevices}
+        setSelectedDevices={setSelectedDevices}
+        showCancelled={showCancelled}
+        setShowCancelled={setShowCancelled}
+        showOnlyConfirmed={showOnlyConfirmed}
+        setShowOnlyConfirmed={setShowOnlyConfirmed}
+      />
+      
+      {processedBookings.length === 0 ? (
         <div className="no-bookings">
           Нет бронирований на выбранную дату.
         </div>
@@ -100,7 +153,8 @@ const Timeline = () => {
         <TimelineView 
           timeSlots={timeSlots}
           selectedDate={selectedDate}
-          filteredBookings={filteredBookings}
+          filteredBookings={processedBookings}
+          devices={devices}
         />
       )}
     </div>

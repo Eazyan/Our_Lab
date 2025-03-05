@@ -13,7 +13,6 @@ const BookingList = ({
 }) => {
   const formatTime = (dateString) => {
     const date = new Date(dateString);
-    // Преобразуем UTC в локальное время
     const localHours = (date.getUTCHours() + 3).toString().padStart(2, '0');
     const minutes = date.getUTCMinutes().toString().padStart(2, '0');
     return `${localHours}:${minutes}`;
@@ -58,22 +57,10 @@ const BookingList = ({
 
   const handleExportToExcel = () => {
     try {
-      console.log('Бронирования для экспорта:', bookings);
       
       const data = bookings.map(booking => {
         const normalizedStatus = (booking.status || '').toString().toLowerCase().trim();
-        
-        // Получаем email из данных бронирования
         const email = booking.userEmail || 'Не указан';
-        
-        console.log('Обработка бронирования:', {
-          id: booking.id,
-          originalStatus: booking.status,
-          normalizedStatus: normalizedStatus,
-          email: email,
-          startTime: booking.start_time || booking.startTime,
-          endTime: booking.end_time || booking.endTime
-        });
         
         return {
           'Прибор': booking.device?.name || booking.deviceName || 'Не указан',
@@ -85,11 +72,9 @@ const BookingList = ({
         };
       });
 
-      console.log('Данные для Excel:', data);
 
       const ws = XLSX.utils.json_to_sheet(data);
       
-      // Устанавливаем ширину колонок
       const colWidths = [
         { wch: 25 }, // Прибор
         { wch: 20 }, // Дата

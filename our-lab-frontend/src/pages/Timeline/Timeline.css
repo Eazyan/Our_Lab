@@ -1,109 +1,174 @@
+/* Основные стили для контейнера */
 .timeline-container {
-    padding: 20px;
+    width: 100%;
     max-width: 1200px;
     margin: 0 auto;
-}
-
-.timeline {
-    position: relative;
-    padding: 20px 0;
-}
-
-.timeline::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 2px;
-    height: 100%;
-    background: #007bff;
-}
-
-.timeline-item {
-    position: relative;
-    margin-bottom: 30px;
-    width: 100%;
-}
-
-.timeline-item:nth-child(odd) {
-    padding-right: 50%;
-}
-
-.timeline-item:nth-child(even) {
-    padding-left: 50%;
-}
-
-.timeline-date {
-    position: absolute;
-    top: 0;
-    width: 120px;
-    padding: 8px;
-    background: #007bff;
-    color: white;
-    text-align: center;
-    border-radius: 4px;
-}
-
-.timeline-item:nth-child(odd) .timeline-date {
-    right: 30px;
-}
-
-.timeline-item:nth-child(even) .timeline-date {
-    left: 30px;
-}
-
-.timeline-content {
-    position: relative;
     padding: 20px;
-    background: white;
+  }
+  
+  .timeline-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .control-button {
+    padding: 8px 16px;
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .control-button:hover {
+    background-color: #357ab8;
+  }
+  
+  .date-selector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .date-input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  
+  .timeline {
+    border: 1px solid #e0e0e0;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.timeline-content::before {
-    content: '';
+    overflow: hidden;
+  }
+  
+  .timeline-header {
+    display: flex;
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .timeline-time-slot {
+    width: 80px;
+    padding: 10px;
+    border-right: 1px solid #e0e0e0;
+  }
+  
+  .timeline-date {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+  }
+  
+  .timeline-body {
+    max-height: 700px;
+    overflow-y: auto;
+  }
+  
+  .timeline-row {
+    display: flex;
+    border-bottom: 1px solid #e0e0e0;
+    position: relative;
+  }
+  
+  .timeline-time {
+    width: 80px;
+    padding: 10px;
+    text-align: center;
+    border-right: 1px solid #e0e0e0;
+    background-color: #f9f9f9;
+  }
+  
+  .timeline-cell {
+    flex: 1;
+    min-height: 60px;
+    position: relative;
+  }
+  
+  .booking-card {
     position: absolute;
-    top: 20px;
-    width: 20px;
-    height: 20px;
-    background: #007bff;
-    border-radius: 50%;
-}
-
-.timeline-item:nth-child(odd) .timeline-content::before {
-    right: -60px;
-}
-
-.timeline-item:nth-child(even) .timeline-content::before {
-    left: -60px;
-}
-
-.timeline-content h3 {
-    margin: 0 0 10px 0;
-    color: #333;
-}
-
-.timeline-content p {
-    margin: 5px 0;
+    width: 100%;  
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    z-index: 2;
+  }
+  
+  
+  .booking-card-content {
+    padding: 10px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
+  .booking-status {
+    font-size: 12px;
+    font-weight: bold;
+  }
+  
+  .loading, .error, .no-bookings {
+    text-align: center;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+  }
+  
+  .loading {
+    background-color: #f0f8ff;
+  }
+  
+  .error {
+    background-color: #ffe0e0;
+    color: #d8000c;
+  }
+  
+  .no-bookings {
+    background-color: #f9f9f9;
     color: #666;
-}
-
-@media (max-width: 768px) {
-    .timeline::before {
-        left: 30px;
+  }
+  
+  .debug-bookings {
+    background-color: #f5f5f5;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+  }
+  
+  .debug-bookings h3 {
+    margin-top: 0;
+  }
+  
+  .debug-bookings ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+  
+  .debug-bookings li {
+    margin-bottom: 5px;
+  }
+  
+  /* Медиа-запрос для адаптивности на маленьких экранах */
+  @media (max-width: 768px) {
+    .timeline-controls {
+      flex-direction: column;
+      gap: 10px;
     }
-
-    .timeline-item {
-        padding-left: 80px !important;
-        padding-right: 0 !important;
+    
+    .timeline-time {
+      width: 60px;
+      font-size: 12px;
     }
-
-    .timeline-date {
-        left: 0 !important;
-        right: auto !important;
+    
+    .booking-card-content {
+      padding: 5px;
+      font-size: 12px;
     }
-
-    .timeline-content::before {
-        left: -50px !important;
-    }
-} 
+  }
+  

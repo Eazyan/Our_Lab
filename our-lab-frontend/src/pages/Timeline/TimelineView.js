@@ -1,12 +1,8 @@
 import React from 'react';
 import BookingCard from './BookingCard';
+import { getTimeFromDate } from './timeUtils';
 
 const TimelineView = ({ selectedDate, filteredBookings, timeSlots }) => {
-  console.log('TimelineView: начало рендеринга');
-  console.log('Отфильтрованные бронирования:', filteredBookings);
-  console.log('Выбранная дата:', selectedDate);
-  console.log('Временные слоты:', timeSlots);
-  
   return (
     <div className="timeline">
       <div className="timeline-header">
@@ -15,46 +11,46 @@ const TimelineView = ({ selectedDate, filteredBookings, timeSlots }) => {
           {selectedDate.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}
         </div>
       </div>
-      <div className="timeline-body" style={{ position: 'relative', height: '700px', backgroundColor: '#f5f5f5' }}>
+      <div className="timeline-body" style={{ position: 'relative', height: '700px', backgroundColor: '#f5f5f5', paddingTop: '10px' }}>
         {/* Временная сетка */}
-        {timeSlots.map((slot, index) => (
-          <div key={slot}>
-            <div style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              top: `${(index / timeSlots.length) * 100}%`,
-              borderTop: '1px solid #e0e0e0',
-              zIndex: 1
-            }} />
-            <div style={{
-              position: 'absolute',
-              left: '5px',
-              top: `${(index / timeSlots.length) * 100}%`,
-              transform: 'translateY(-50%)',
-              fontSize: '12px',
-              color: '#666',
-              zIndex: 2
-            }}>
-              {slot}
+        {timeSlots.map((slot, index) => {
+          const position = (index / (timeSlots.length - 1)) * 100;
+          return (
+            <div key={slot}>
+              <div style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: `calc(${position}% + 10px)`,
+                borderTop: '1px solid #e0e0e0',
+                zIndex: 0
+              }} />
+              <div style={{
+                position: 'absolute',
+                left: '5px',
+                top: `calc(${position}% + 10px)`,
+                transform: 'translateY(-50%)',
+                fontSize: '12px',
+                color: '#666',
+                zIndex: 1
+              }}>
+                {slot}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         
         {/* Бронирования */}
         {filteredBookings && filteredBookings.length > 0 ? (
           filteredBookings.map((booking) => {
-            console.log('Рендеринг бронирования:', booking);
-            if (!booking.startTime || !booking.endTime) {
-              console.log('Пропуск бронирования - отсутствует startTime или endTime');
-              return null;
-            }
-            const bookingStart = new Date(booking.startTime);
-            const bookingEnd = new Date(booking.endTime);
-            console.log('Время бронирования:', {
-              start: bookingStart.toISOString(),
-              end: bookingEnd.toISOString()
-            });
+            const startTime = booking.start_time || booking.startTime;
+            const endTime = booking.end_time || booking.endTime;
+            
+            if (!startTime || !endTime) return null;
+
+            const bookingStart = new Date(startTime);
+            const bookingEnd = new Date(endTime);
+
             return (
               <BookingCard 
                 key={booking.id}

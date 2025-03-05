@@ -3,13 +3,11 @@ export const formatDate = (date) => {
   return date.toLocaleDateString('ru-RU', options);
 };
 
-export const formatTime = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleTimeString('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+export const formatTime = (date) => {
+  if (!date) return '';
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  return `${hours}:${minutes}`;
 };
 
 export const isSameDay = (date1, date2) => {
@@ -41,7 +39,7 @@ export const isWithinBusinessHours = (startTime, endTime) => {
   const startTimeMinutes = startHour * 60 + startMinute;
   const endTimeMinutes = endHour * 60 + endMinute;
   
-  const businessStartMinutes = 8 * 60 + 30;
+  const businessStartMinutes = 8 * 60;
   const businessEndMinutes = 17 * 60;
   
   return (
