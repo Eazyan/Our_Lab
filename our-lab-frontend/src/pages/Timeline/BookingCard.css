@@ -1,0 +1,22 @@
+.booking-card {
+  position: absolute;
+  border-radius: 4px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.booking-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  z-index: 1000;
+}
+
+.booking-card:not(:hover) {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 3;
+} 

@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import './BookingHistory.css';
 import { exportBookingsToExcel } from '../../utils/excelExport';
 
 const BookingHistory = ({ bookings, devices, onCancel, onConfirm }) => {
+  const [sortBy, setSortBy] = useState('pending');
+  const [showOnlyConfirmed, setShowOnlyConfirmed] = useState(false);
+
   const formatDate = (dateString) => {
     if (!dateString) return 'Дата не указана';
     
@@ -66,22 +69,87 @@ const BookingHistory = ({ bookings, devices, onCancel, onConfirm }) => {
     exportBookingsToExcel(bookings, devices, formatDate, formatTime, getStatusText);
   };
 
+  const filteredAndSortedBookings = bookings
+    .filter(booking => {
+      if (showOnlyConfirmed) {
+        return booking.status === 'confirmed';
+      }
+      if (sortBy === 'all') {
+        return true;
+      }
+      if (sortBy === 'all_pending') {
+        return booking.status === 'pending';
+      }
+      return booking.status === sortBy;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'all') return 0;
+      if (sortBy === 'all_pending') return 0;
+      if (a.status === sortBy && b.status !== sortBy) return -1;
+      if (a.status !== sortBy && b.status === sortBy) return 1;
+      return 0;
+    });
+
   return (
     <div>
       <div className="booking-header">
         <h3>История бронирований</h3>
-        <button 
-          onClick={handleExportToExcel}
-          className="export-button"
-        >
-          Выгрузить в Excel
-        </button>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <input
+                type="checkbox"
+                checked={showOnlyConfirmed}
+                onChange={(e) => setShowOnlyConfirmed(e.target.checked)}
+              />
+              Только подтверждённые
+            </label>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              className={`filter-button ${sortBy === 'all' ? 'active' : ''}`}
+              onClick={() => setSortBy('all')}
+            >
+              Все
+            </button>
+            <button
+              className={`filter-button ${sortBy === 'all_pending' ? 'active' : ''}`}
+              onClick={() => setSortBy('all_pending')}
+            >
+              Все ожидающие
+            </button>
+            <button
+              className={`filter-button ${sortBy === 'confirmed' ? 'active' : ''}`}
+              onClick={() => setSortBy('confirmed')}
+            >
+              Подтверждено
+            </button>
+            <button
+              className={`filter-button ${sortBy === 'cancelled' ? 'active' : ''}`}
+              onClick={() => setSortBy('cancelled')}
+            >
+              Отменено
+            </button>
+            <button
+              className={`filter-button ${sortBy === 'completed' ? 'active' : ''}`}
+              onClick={() => setSortBy('completed')}
+            >
+              Завершено
+            </button>
+          </div>
+          <button 
+            onClick={handleExportToExcel}
+            className="export-button"
+          >
+            Выгрузить в Excel
+          </button>
+        </div>
       </div>
-      {bookings.length === 0 ? (
+      {filteredAndSortedBookings.length === 0 ? (
         <p>Нет бронирований</p>
       ) : (
         <div className="booking-list">
-          {bookings.map((booking) => {
+          {filteredAndSortedBookings.map((booking) => {
             const device = devices.find((device) => 
               device.id === booking.deviceId || 
               device.id === booking.device_id

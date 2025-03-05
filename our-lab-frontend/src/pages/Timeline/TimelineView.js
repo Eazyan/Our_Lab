@@ -1,6 +1,6 @@
 import React from 'react';
 import BookingCard from './BookingCard';
-import { getTimeFromDate } from './timeUtils';
+import { formatTime } from './timeUtils';
 
 const TimelineView = ({ selectedDate, filteredBookings, timeSlots }) => {
   return (

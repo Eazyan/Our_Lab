@@ -4,7 +4,6 @@ import './Timeline.css';
 import TimelineControls from './TimelineControls';
 import TimelineView from './TimelineView';
 import TimelineFilters from './TimelineFilters';
-import { getTimeFromDate } from './timeUtils';
 
 const Timeline = ({ bookings: initialBookings, devices: initialDevices }) => {
   const startTime = 8;  

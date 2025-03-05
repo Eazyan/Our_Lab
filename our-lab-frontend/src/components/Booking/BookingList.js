@@ -1,11 +1,11 @@
-import React from 'react';
-import { toast } from 'react-toastify';
+import React, { useState, useEffect, useCallback } from 'react';
 import BookingRow from './BookingRow';
 import './BookingList.css';
-import * as XLSX from 'xlsx';
+import { exportBookingsToExcel } from '../../utils/excelExport';
 
 const BookingList = ({ 
   bookings, 
+  devices, 
   onConfirmBooking, 
   onCancelBooking, 
   onBookingClick,
@@ -55,50 +55,15 @@ const BookingList = ({
     }
   };
 
-  const handleExportToExcel = () => {
-    try {
-      
-      const data = bookings.map(booking => {
-        const normalizedStatus = (booking.status || '').toString().toLowerCase().trim();
-        const email = booking.userEmail || 'Не указан';
-        
-        return {
-          'Прибор': booking.device?.name || booking.deviceName || 'Не указан',
-          'Дата': formatDate(booking.start_time || booking.startTime),
-          'Время': `${formatTime(booking.start_time || booking.startTime)} - ${formatTime(booking.end_time || booking.endTime)}`,
-          'Статус': getStatusText(normalizedStatus),
-          'Email пользователя': email,
-          'Создано': formatCreatedDate(booking.created_at || booking.createdAt)
-        };
-      });
+  const handleExportToExcel = useCallback(() => {
+    exportBookingsToExcel(bookings, devices, formatDate, formatTime, getStatusText);
+  }, [bookings, devices]);
 
-
-      const ws = XLSX.utils.json_to_sheet(data);
-      
-      const colWidths = [
-        { wch: 25 }, // Прибор
-        { wch: 20 }, // Дата
-        { wch: 20 }, // Время
-        { wch: 25 }, // Статус
-        { wch: 35 }, // Email
-        { wch: 20 }  // Создано
-      ];
-      ws['!cols'] = colWidths;
-
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Бронирования');
-      XLSX.writeFile(wb, 'Бронирования.xlsx');
-    } catch (error) {
-      console.error('Ошибка при экспорте в Excel:', error);
-      toast.error('Ошибка при экспорте в Excel');
-    }
-  };
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (onExportToExcel) {
       onExportToExcel(() => handleExportToExcel);
     }
-  }, [onExportToExcel]);
+  }, [handleExportToExcel, onExportToExcel]);
 
   if (!bookings || bookings.length === 0) {
     return (

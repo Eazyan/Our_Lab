@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import TimelineBookingDetailsModal from './TimelineBookingDetailsModal';
 import { formatTime, formatDate, getStatusText } from './timeUtils';
 import { getRandomColor } from './utils';
-import BookingDetailsModal from '../../components/Booking/BookingDetailsModal';
+import './BookingCard.css';
 
 const BookingCard = ({ booking, bookingStart, bookingEnd }) => {
   const [isHovered, setIsHovered] = useState(false);
@@ -37,23 +38,11 @@ const BookingCard = ({ booking, bookingStart, bookingEnd }) => {
         onMouseLeave={() => setIsHovered(false)}
         onClick={() => setShowModal(true)}
         style={{
-          position: 'absolute',
           top: `${topPosition}%`,
           height: `${height}%`,
           backgroundColor,
           width: '90%',
-          left: '5%',
-          borderRadius: '4px',
-          boxShadow: isHovered ? '0 4px 8px rgba(0,0,0,0.2)' : '0 2px 4px rgba(0,0,0,0.1)',
-          padding: '8px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          zIndex: isHovered ? 1000 : 3,
-          overflow: 'hidden',
-          transform: isHovered ? 'scale(1.02)' : 'scale(1)',
-          transition: 'all 0.2s ease-in-out',
-          cursor: 'pointer'
+          left: '5%'
         }}
       >
         <div style={{ 
@@ -83,7 +72,7 @@ const BookingCard = ({ booking, bookingStart, bookingEnd }) => {
       </div>
 
       {showModal && (
-        <BookingDetailsModal
+        <TimelineBookingDetailsModal
           booking={formattedBooking}
           onClose={() => setShowModal(false)}
           formatTime={formatTime}

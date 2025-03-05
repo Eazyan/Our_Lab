@@ -45,8 +45,10 @@ const useBookings = () => {
     useEffect(() => {
         const filtered = bookings.filter(booking => {
             if (filter === 'all') return true;
-            if (filter === 'pending') return booking.status === 'pending';
+            if (filter === 'all_pending') return booking.status === 'pending';
+            if (filter === 'confirmed') return booking.status === 'confirmed';
             if (filter === 'cancelled') return booking.status === 'cancelled';
+            if (filter === 'completed') return booking.status === 'completed';
             return true;
         }).map(booking => ({
             ...booking,
