@@ -22,11 +22,13 @@ async def get_bookings(
     result = []
     for booking in bookings:
         device = db.query(models.Device).filter(models.Device.id == booking.device_id).first()
-        booking_dict = schemas.Booking.model_validate(booking).model_dump()
+        if not device:
+            continue
+            
         booking_response = {
             "id": booking.id,
             "deviceId": booking.device_id,
-            "deviceName": device.name if device else "Неизвестный прибор",
+            "deviceName": device.name,
             "startTime": booking.start_time.isoformat(),
             "endTime": booking.end_time.isoformat(),
             "status": booking.status,
