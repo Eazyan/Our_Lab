@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getToken, setToken } from './auth';
+import { getToken, setToken, removeToken } from './auth';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 export const apiUrl = API_URL;
@@ -29,7 +29,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      window.location.href = '/';
+      removeToken();
+      const event = new Event('authStateChanged');
+      window.dispatchEvent(event);
     }
     return Promise.reject(error);
   }
@@ -102,6 +104,36 @@ export const createBooking = async (bookingData) => {
 export const deleteBooking = async (bookingId) => {
   try {
     await api.delete(`/bookings/${bookingId}`);
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const confirmBooking = async (bookingId) => {
+  try {
+    const response = await api.patch(`/bookings/${bookingId}/confirm`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const cancelBooking = async (id) => {
+  try {
+    const response = await fetch(`${apiUrl}/bookings/${id}/cancel`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getToken()}`
+      }
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Ошибка при отмене бронирования');
+    }
+
+    return await response.json();
   } catch (error) {
     throw error;
   }

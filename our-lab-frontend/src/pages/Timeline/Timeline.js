@@ -3,8 +3,6 @@ import '../Timeline.css';
 import { getBookings } from '../../utils/api.js';
 import TimelineControls from './TimelineControls';
 import TimelineView from './TimelineView';
-import { isSameDay } from './utils';
-import DebugBookings from './DebugBookings';
 
 const Timeline = () => {
   const startTime = 8;  
@@ -46,17 +44,13 @@ const Timeline = () => {
       try {
         setLoading(true);
         const response = await getBookings();
-        console.log('Получены данные о бронированиях:', response);
         
         if (isMounted) {
-          // Проверяем структуру ответа и извлекаем данные
           const bookingsData = response?.data || response || [];
-          console.log('Обработанные данные о бронированиях:', bookingsData);
           setBookings(bookingsData);
           setError(null);
         }
       } catch (err) {
-        console.error('Ошибка при загрузке бронирований:', err);
         if (isMounted) {
           setError('Не удалось загрузить данные о бронированиях');
           setBookings([]);
@@ -76,9 +70,7 @@ const Timeline = () => {
   }, []);
 
   const filteredBookings = bookings.filter(booking => {
-    console.log('Проверка бронирования для фильтрации:', booking);
     if (!booking || !booking.startTime) {
-      console.log('Бронирование пропущено - нет startTime');
       return false;
     }
     
@@ -128,8 +120,6 @@ const Timeline = () => {
           filteredBookings={filteredBookings}
         />
       )}
-      
-      <DebugBookings bookings={bookings} error={error} />
     </div>
   );
 };

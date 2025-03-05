@@ -54,7 +54,6 @@ const Dashboard = () => {
       }
     ];
 
-    // Добавляем карточку устройств только для администраторов и преподавателей
     if (userRole === 'admin' || userRole === 'teacher') {
       cards.push({
         id: 'devices',

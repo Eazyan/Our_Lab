@@ -32,7 +32,8 @@ async def get_bookings(
             "startTime": booking.start_time.isoformat(),
             "endTime": booking.end_time.isoformat(),
             "status": booking.status,
-            "created_at": booking.created_at.isoformat() if booking.created_at else None
+            "created_at": booking.created_at.isoformat() if booking.created_at else None,
+            "userEmail": booking.user.email if booking.user else None
         }
         result.append(booking_response)
     return result
@@ -117,6 +118,29 @@ async def update_booking(booking_id: int, booking_update: schemas.BookingUpdate,
     
     return response
 
+@router.patch("/{booking_id}/cancel", response_model=schemas.Booking)
+async def cancel_booking(
+    booking_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    booking = db.query(models.Booking).filter(models.Booking.id == booking_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Бронирование не найдено")
+    
+    if booking.status == "Отменено":
+        raise HTTPException(status_code=400, detail="Бронирование уже отменено")
+    
+    booking.status = "Отменено"
+    db.commit()
+    db.refresh(booking)
+    
+    response = schemas.Booking.model_validate(booking).model_dump()
+    response["device_name"] = booking.device.name if booking.device else "Неизвестный прибор"
+    response["userEmail"] = booking.user.email if booking.user else None
+    
+    return response
+
 @router.delete("/{booking_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_booking(booking_id: int, db: Session = Depends(get_db)):
     booking = db.query(models.Booking).filter(models.Booking.id == booking_id).first()
@@ -125,4 +149,27 @@ async def delete_booking(booking_id: int, db: Session = Depends(get_db)):
     
     db.delete(booking)
     db.commit()
-    return None 
+    return None
+
+@router.patch("/{booking_id}/confirm", response_model=schemas.Booking)
+async def confirm_booking(
+    booking_id: int,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    booking = db.query(models.Booking).filter(models.Booking.id == booking_id).first()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Бронирование не найдено")
+    
+    if booking.status == "Подтверждено":
+        raise HTTPException(status_code=400, detail="Бронирование уже подтверждено")
+    
+    booking.status = "Подтверждено"
+    db.commit()
+    db.refresh(booking)
+    
+    response = schemas.Booking.model_validate(booking).model_dump()
+    response["device_name"] = booking.device.name if booking.device else "Неизвестный прибор"
+    response["userEmail"] = booking.user.email if booking.user else None
+    
+    return response 

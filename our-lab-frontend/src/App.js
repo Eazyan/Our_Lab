@@ -23,33 +23,36 @@ function App() {
   const [isAuth, setIsAuth] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const checkAuth = () => {
-    const authenticated = isAuthenticated();
-    setIsAuth(authenticated);
-    
-    if (authenticated) {
-      const role = getUserRole();
-      setUserRole(role);
-      console.log('Пользователь аутентифицирован, роль:', role);
-    } else {
-      setUserRole(null);
-      console.log('Пользователь не аутентифицирован');
-    }
-    
-    setIsLoading(false);
-  };
-
   useEffect(() => {
+    const checkAuth = () => {
+      const authenticated = isAuthenticated();
+      setIsAuth(authenticated);
+      
+      if (authenticated) {
+        const role = getUserRole();
+        setUserRole(role);
+        console.log('Пользователь аутентифицирован, роль:', role);
+      } else {
+        setUserRole(null);
+        console.log('Пользователь не аутентифицирован');
+      }
+      
+      setIsLoading(false);
+    };
+
     checkAuth();
     
-    // Добавляем обработчик события для обновления состояния аутентификации
-    window.addEventListener('authStateChanged', checkAuth);
+    const handleAuthChange = () => {
+      checkAuth();
+    };
+    
+    window.addEventListener('authStateChanged', handleAuthChange);
     
     const interval = setInterval(checkAuth, 5 * 60 * 1000);
     
     return () => {
       clearInterval(interval);
-      window.removeEventListener('authStateChanged', checkAuth);
+      window.removeEventListener('authStateChanged', handleAuthChange);
     };
   }, []);
 

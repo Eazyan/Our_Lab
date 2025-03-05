@@ -92,3 +92,4 @@ typings/
 *.pyc
 /our-lab-backend/app/routers/__pycache__
 our-lab-backend/app/routers/__pycache__/bookings.cpython-312.pyc
+*.pyc

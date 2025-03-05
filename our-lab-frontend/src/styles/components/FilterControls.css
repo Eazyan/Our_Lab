@@ -1,0 +1,54 @@
+.bookings-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.filter-btn.active {
+  background-color: #2196f3;
+  color: white;
+  border-color: #2196f3;
+}
+
+.create-booking-btn {
+  padding: 10px 20px !important;
+  background-color: #2196f3 !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2) !important;
+  font-size: 1rem !important;
+}
+
+.create-booking-btn:hover {
+  background-color: #1976d2 !important;
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3) !important;
+  transform: translateY(-1px) !important;
+}
+
+.create-booking-btn:active {
+  transform: translateY(0) !important;
+  box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2) !important;
+} 
