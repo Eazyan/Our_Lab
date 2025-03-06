@@ -54,7 +54,7 @@ const Devices = () => {
             setSelectedDevice(null);
         } catch (err) {
             console.error('Ошибка:', err);
-            toast.error('Не удалось сохранить прибор');
+            toast.error(isCreating ? 'Не удалось создать прибор' : 'Не удалось обновить прибор');
         }
     };
 
@@ -69,6 +69,12 @@ const Devices = () => {
                 toast.error('Не удалось удалить прибор');
             }
         }
+    };
+
+    const handleCloseModal = () => {
+        setIsEditing(false);
+        setIsCreating(false);
+        setSelectedDevice(null);
     };
 
     if (loading) return <div className="loading">Загрузка...</div>;
@@ -124,7 +130,7 @@ const Devices = () => {
                                     type="text"
                                     id="name"
                                     name="name"
-                                    defaultValue={selectedDevice?.name}
+                                    defaultValue={selectedDevice?.name || ''}
                                     required
                                 />
                             </div>
@@ -133,13 +139,17 @@ const Devices = () => {
                                 <textarea
                                     id="description"
                                     name="description"
-                                    defaultValue={selectedDevice?.description}
+                                    defaultValue={selectedDevice?.description || ''}
                                     required
                                 />
                             </div>
                             <div className="form-group">
                                 <label htmlFor="status">Статус</label>
-                                <select name="status" defaultValue={selectedDevice?.status || 'available'}>
+                                <select 
+                                    id="status"
+                                    name="status" 
+                                    defaultValue={selectedDevice?.status || 'available'}
+                                >
                                     <option value="available">Доступен</option>
                                     <option value="in_use">В использовании</option>
                                     <option value="maintenance">На обслуживании</option>
@@ -151,11 +161,7 @@ const Devices = () => {
                                 </button>
                                 <button 
                                     type="button" 
-                                    onClick={() => {
-                                        setIsEditing(false);
-                                        setIsCreating(false);
-                                        setSelectedDevice(null);
-                                    }}
+                                    onClick={handleCloseModal}
                                     className="cancel-button"
                                 >
                                     Отмена

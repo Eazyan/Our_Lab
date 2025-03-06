@@ -21,7 +21,7 @@ export const deviceService = {
 
     // Обновить устройство
     updateDevice: async (id, deviceData) => {
-        const response = await api.put(`/devices/${id}`, deviceData);
+        const response = await api.patch(`/devices/${id}`, deviceData);
         return response.data;
     },
 
