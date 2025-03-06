@@ -1,5 +1,7 @@
 import React from 'react';
-import './BookingFilters.css';
+import './styles/filters.css';
+import './styles/devices.css';
+import './styles/buttons.css';
 
 const BookingFilters = ({
   showOnlyMine,
@@ -15,46 +17,59 @@ const BookingFilters = ({
   canManageBookings,
   handleExportToExcel
 }) => {
-  const allDevicesSelected = selectedDevices.length === devices.length;
-
   return (
-    <div className="booking-history-filters">
-      <div className="history-filter-group">
-        <label className="history-filter-checkbox">
-          <input
-            type="checkbox"
-            checked={showOnlyMine}
-            onChange={(e) => setShowOnlyMine(e.target.checked)}
-          />
-          <span>Мои бронирования</span>
-        </label>
-        <label className="history-filter-checkbox">
-          <input
-            type="checkbox"
-            checked={showOnlyToday}
-            onChange={(e) => setShowOnlyToday(e.target.checked)}
-          />
-          <span>Сегодня</span>
-        </label>
-      </div>
-      
-      <div className="history-devices-filter">
-        <div className="devices-filter-header">
-          <label className="history-filter-checkbox">
+    <div className="filters-container">
+      <div className="filter-section">
+        <div className="filter-group">
+          <label className="filter-checkbox">
             <input
               type="checkbox"
-              checked={allDevicesSelected}
-              onChange={handleSelectAllDevices}
+              checked={showOnlyMine}
+              onChange={(e) => setShowOnlyMine(e.target.checked)}
             />
-            <span>Выбрать все приборы</span>
+            <span>Мои бронирования</span>
+          </label>
+          <label className="filter-checkbox">
+            <input
+              type="checkbox"
+              checked={showOnlyToday}
+              onChange={(e) => setShowOnlyToday(e.target.checked)}
+            />
+            <span>Сегодня</span>
           </label>
         </div>
-        <div className="devices-filter-list">
-          {devices.map(device => (
-            <label
-              key={device.id}
-              className="device-filter-checkbox"
-            >
+      </div>
+
+      <div className="filter-section">
+        <div className="filter-group">
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+            className="status-select"
+          >
+            <option value="all">Все статусы</option>
+            <option value="pending">Ожидающие</option>
+            <option value="confirmed">Подтверждённые</option>
+            <option value="cancelled">Отменённые</option>
+            <option value="completed">Завершённые</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="filter-section devices-section">
+        <div className="filter-header">
+          <label className="filter-checkbox">
+            <input
+              type="checkbox"
+              checked={selectedDevices.length === devices.length}
+              onChange={handleSelectAllDevices}
+            />
+            <span>Все устройства</span>
+          </label>
+        </div>
+        <div className="device-filters">
+          {devices.map((device) => (
+            <label key={device.id} className="device-checkbox">
               <input
                 type="checkbox"
                 checked={selectedDevices.includes(device.id)}
@@ -66,39 +81,12 @@ const BookingFilters = ({
         </div>
       </div>
 
-      <div className="history-filter-buttons">
-        <button
-          className={`history-filter-button ${filterStatus === 'all' ? 'active' : ''}`}
-          onClick={() => setFilterStatus('all')}
-        >
-          Все
-        </button>
-        <button
-          className={`history-filter-button ${filterStatus === 'pending' ? 'active' : ''}`}
-          onClick={() => setFilterStatus('pending')}
-        >
-          Ожидающие
-        </button>
-        <button
-          className={`history-filter-button ${filterStatus === 'confirmed' ? 'active' : ''}`}
-          onClick={() => setFilterStatus('confirmed')}
-        >
-          Подтверждённые
-        </button>
-        <button
-          className={`history-filter-button ${filterStatus === 'cancelled' ? 'active' : ''}`}
-          onClick={() => setFilterStatus('cancelled')}
-        >
-          Отменённые
-        </button>
-      </div>
       {canManageBookings && (
-        <button 
-          onClick={handleExportToExcel}
-          className="history-export-button"
-        >
-          Выгрузить в Excel
-        </button>
+        <div className="filter-section">
+          <button onClick={handleExportToExcel} className="export-button">
+            Выгрузить в Excel
+          </button>
+        </div>
       )}
     </div>
   );

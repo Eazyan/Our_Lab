@@ -5,7 +5,10 @@ import BookingItem from './BookingItem';
 import BookingDetailsModal from './BookingDetailsModal';
 import { exportBookingsToExcel } from '../../utils/excelExport';
 import jwtDecode from 'jwt-decode';
-import './BookingHistory.css';
+import './styles/layout.css';
+import './styles/booking-item.css';
+import './styles/modal.css';
+import './styles/actions.css';
 
 const BookingHistory = ({ bookings, devices, onCancel, onConfirm, onDelete }) => {
   const [showOnlyMine, setShowOnlyMine] = useState(false);

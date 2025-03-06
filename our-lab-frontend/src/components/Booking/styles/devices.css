@@ -1,0 +1,28 @@
+.devices-section {
+  border-top: 1px solid #ddd;
+  padding-top: 15px;
+}
+
+.filter-header {
+  margin-bottom: 10px;
+}
+
+.device-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.device-checkbox {
+  composes: filter-checkbox from './filters.css';
+}
+
+@media screen and (max-width: 768px) {
+  .device-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .device-checkbox {
+    width: 100%;
+  }
+} 

@@ -1,0 +1,88 @@
+.booking-history-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 1rem;
+  align-items: center;
+}
+
+.history-confirm-button,
+.history-cancel-button,
+.history-delete-button {
+  min-width: 120px;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+}
+
+.history-confirm-button {
+  composes: action-button from './buttons.css';
+  background-color: #4caf50;
+  color: white;
+}
+
+.history-confirm-button:hover {
+  background-color: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 0.125em 0.25em rgba(76, 175, 80, 0.2);
+}
+
+.history-cancel-button {
+  composes: action-button from './buttons.css';
+  background-color: #f44336;
+  color: white;
+}
+
+.history-cancel-button:hover {
+  background-color: #d32f2f;
+  transform: translateY(-1px);
+  box-shadow: 0 0.125em 0.25em rgba(244, 67, 54, 0.2);
+}
+
+.history-delete-button {
+  composes: action-button from './buttons.css';
+  background-color: #dc3545;
+  color: white;
+}
+
+.history-delete-button:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 0.125em 0.25em rgba(220, 53, 69, 0.2);
+}
+
+.history-export-button {
+  composes: action-button from './buttons.css';
+  background-color: #2196f3;
+  color: white;
+  width: 100%;
+}
+
+.history-export-button:hover {
+  background-color: #1976d2;
+  transform: translateY(-1px);
+  box-shadow: 0 0.125em 0.25em rgba(33, 150, 243, 0.2);
+}
+
+@media screen and (max-width: 768px) {
+  .booking-history-actions {
+    margin-left: 0;
+    margin-top: 1rem;
+    flex-direction: column;
+    width: 100%;
+    gap: 0.6rem;
+  }
+
+  .history-confirm-button,
+  .history-cancel-button,
+  .history-delete-button {
+    width: 100%;
+    min-width: unset;
+    padding: 0.7rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (hover: none) {
+  .history-filter-button {
+    padding: 0.75em 1em;
+  }
+} 
