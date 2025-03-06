@@ -18,19 +18,6 @@ const BookingHistory = ({ bookings, devices, onCancel, onConfirm, onDelete }) =>
   const userEmail = token ? jwtDecode(token).sub : null;
 
   useEffect(() => {
-    if (bookings && bookings.length > 0) {
-      console.log('Пример бронирования:', {
-        booking: bookings[0],
-        fields: Object.keys(bookings[0]),
-        userEmailField: bookings[0].userEmail || bookings[0].user_email,
-        currentUserEmail: userEmail,
-        token: token,
-        decodedToken: token ? jwtDecode(token) : null
-      });
-    }
-  }, [bookings, userEmail, token]);
-
-  useEffect(() => {
     if (devices && devices.length > 0) {
       setSelectedDevices(devices.map(device => device.id));
     }
@@ -126,17 +113,6 @@ const BookingHistory = ({ bookings, devices, onCancel, onConfirm, onDelete }) =>
     const deviceId = booking.deviceId || booking.device_id;
     const bookingEmail = booking.userEmail || booking.user_email;
     
-    console.log('Проверка бронирования:', {
-      booking,
-      deviceCheck: selectedDevices.includes(deviceId),
-      emailCheck: showOnlyMine ? bookingEmail === userEmail : true,
-      userEmail: userEmail,
-      bookingEmail: bookingEmail,
-      showOnlyMine: showOnlyMine,
-      dateCheck: !showOnlyToday || isToday(booking.startTime || booking.start_time),
-      statusCheck: filterStatus === 'all' || booking.status === filterStatus
-    });
-    
     // Проверка устройства
     if (selectedDevices.length > 0 && !selectedDevices.includes(deviceId)) {
       return false;
@@ -158,6 +134,24 @@ const BookingHistory = ({ bookings, devices, onCancel, onConfirm, onDelete }) =>
     }
     
     return true;
+  }).sort((a, b) => {
+    // Приоритеты статусов
+    const statusPriority = {
+      'pending': 0,    // Самый высокий приоритет
+      'confirmed': 1,  // Средний приоритет
+      'cancelled': 2,  // Низкий приоритет
+      'completed': 3   // Самый низкий приоритет
+    };
+
+    // Сначала сортируем по статусу
+    if (statusPriority[a.status] !== statusPriority[b.status]) {
+      return statusPriority[a.status] - statusPriority[b.status];
+    }
+
+    // Если статусы одинаковые, сортируем по дате
+    const dateA = new Date(a.startTime || a.start_time);
+    const dateB = new Date(b.startTime || b.start_time);
+    return dateA - dateB;
   });
 
   const canManageBookings = userRole === 'teacher' || userRole === 'admin';
